@@ -1,43 +1,122 @@
 .dashboard {
-  padding: 2rem;
+  padding: 1.5rem;
+  min-height: 100vh;
 }
 
 .content {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 2rem;
-  margin-top: 2rem;
+  max-width: 1900px;
+  margin: 0 auto;
 }
 
 .section {
-  background: white;
+  background: transparent;
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+.tableHeader {
+  padding: 1rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1.5rem;
+  background: transparent;
+}
+
+.statsContainer {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex: 1;
+}
+
+.dateFilter {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.dateInput {
+  padding: 0.5rem 0.75rem;
+  border: 2px solid #e5e7eb;
   border-radius: 8px;
-  padding: 1.5rem;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  font-size: 0.875rem;
+  transition: all 0.2s ease;
 }
 
-h1 {
-  color: #2c3e50;
-  margin-bottom: 2rem;
+.dateInput:focus {
+  outline: none;
+  border-color: #ee1b22;
 }
 
-h2 {
-  color: #34495e;
-  margin-bottom: 1rem;
-  font-size: 1.25rem;
+.statsCards {
+  display: flex;
+  gap: 0.75rem;
 }
 
-/* Estilos específicos para el panel de líder */
-.section {
+.statCard {
+  min-width: 120px;
+  padding: 0.75rem 1.5rem;
+  background: white;
+  border-radius: 10px;
+  text-align: center;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
   transition: transform 0.2s ease;
-  border-left: 4px solid #3498db;
+  border-bottom: 4px solid #ed1b22;
 }
 
-.section:hover {
+.statCard:hover {
   transform: translateY(-2px);
 }
 
-/* Estilos para la sección de métricas */
-.metricsSection {
-  background: linear-gradient(to right bottom, #ffffff, #f8f9fa);
+.statCount {
+  font-size: 1.75rem;
+  font-weight: 700;
+  line-height: 1;
+  margin-bottom: 0.15rem;
+  color: #1f2937;
+}
+
+.statLabel {
+  font-size: 0.6rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #6b7280;
+}
+
+.tableContainer {
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.nameCell {
+  color: #1f2937;
+}
+
+@media (max-width: 1200px) {
+  .statsCards {
+    flex-wrap: wrap;
+  }
+}
+
+@media (max-width: 768px) {
+  .dashboard {
+    padding: 1rem;
+  }
+
+  .tableHeader {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .statsContainer {
+    flex-direction: column;
+  }
+
+  .statsCards {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+  }
 }
