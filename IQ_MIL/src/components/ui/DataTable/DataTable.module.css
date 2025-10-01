@@ -1,462 +1,335 @@
-/* Contenedor principal */
+:root {
+  --row-h: 30px;
+}
+
 .tableContainer {
   width: 100%;
-  background: white;
+  background: #f7fafc;
   border-radius: 12px;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  /* importante: visible para no recortar el popover */
+  overflow: visible;
 }
 
-/* Header con filtro global */
-.tableHeader {
-  padding: 1.5rem;
-  border-bottom: 1px solid #e5e7eb;
-  background: #f9fafb;
-}
-
-.searchContainer {
-  position: relative;
-  max-width: 400px;
-}
-
-.globalFilter {
-  width: 100%;
-  padding: 0.75rem 1rem;
-  padding-left: 2.5rem;
-  border: 1px solid #d1d5db;
-  border-radius: 8px;
-  font-size: 0.875rem;
-  transition: all 0.2s ease;
-  background: white;
-  color: #1f2937;
-}
-
-.globalFilter:focus {
-  outline: none;
-  ring: 2px solid #3b82f6;
-  border-color: #3b82f6;
-}
-
-.globalFilter::placeholder {
-  color: #9ca3af;
-}
-
-.searchIcon {
-  position: absolute;
-  left: 0.75rem;
-  top: 50%;
-  transform: translateY(-50%);
-  color: #6b7280;
-  pointer-events: none;
-}
-
-/* Modificar el wrapper de la tabla para permitir que los popovers se muestren */
 .tableWrapper {
   overflow-x: auto;
-  max-height: 600px;
-  overflow-y: auto;
-  /* Agregar esto para que los popovers no se corten */
-  position: relative;
+  max-width: 100%;
+  border-radius: 12px 12px 0 0;
+  overflow-x: auto;
+  overflow-y: visible;
 }
 
-/* Tabla */
 .table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 0.875rem;
-}
-
-/* Header de la tabla */
-.tableHead {
-  background: #283760;
-  position: sticky;
-  top: 0;
-  z-index: 10; /* Mantener bajo para que los popovers estén encima */
-}
-
-.headerRow {
-  border: none;
-}
-
-.headerCell {
-  padding: 0;
-  text-align: left;
-  border-bottom: 1px solid #374151;
+  font-size: 13px;
   position: relative;
+}
+
+.table thead {
+  position: relative;
+  z-index: 10;
+}
+
+.th {
+  background: #283760;
+  padding: 12px 16px;
+  text-align: left;
+  font-weight: 600;
+  color: #ffffff;
+  border-bottom: 2px solid #e0e0e0;
+  white-space: nowrap;
+  position: relative;
+  overflow: visible;
+}
+
+.th:first-child {
+  border-top-left-radius: 12px;
+}
+
+.th:last-child {
+  border-top-right-radius: 12px;
 }
 
 .headerContent {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
-  padding: 1rem;
+  gap: 8px;
+  position: relative;
 }
 
-.headerText {
+.headerLabel {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  font-weight: 600;
-  color: white;
-  cursor: default;
+  gap: 4px;
   user-select: none;
 }
 
-.sortable {
-  cursor: pointer;
-  transition: color 0.2s ease;
-}
-
-.sortable:hover {
-  color: #aed4eb;
-}
-
 .sortIcon {
-  margin-left: 0.25rem;
-  font-size: 0.75rem;
-  opacity: 0.7;
+  font-size: 12px;
+  color: #3498db;
 }
 
-.columnFilter {
-  padding: 0.5rem;
-  border: 1px solid #4b5563;
-  border-radius: 4px;
-  font-size: 0.75rem;
-  background: rgba(255, 255, 255, 0.1);
-  color: white;
-  transition: all 0.2s ease;
+.td {
+  padding: 12px 16px;
+  border-bottom: 1px solid #f0f0f0;
+  color: #34495e;
+  height: var(--row-h);
 }
 
-.columnFilter:focus {
-  outline: none;
-  border-color: #aed4eb;
-  background: rgba(255, 255, 255, 0.2);
+.tr:hover {
+  background: #f8f9fa;
 }
 
-.columnFilter::placeholder {
-  color: #d1d5db;
+/* filas de relleno para altura fija */
+.padRow .padCell {
+  height: var(--row-h);
+  border-bottom: 1px solid #f0f0f0;
+  background: #fff;
 }
 
-/* Cuerpo de la tabla */
-.tableBody {
-  background: white;
+/* -------- Filtros base -------- */
+
+.filterWrap {
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
 
-.bodyRow {
-  border-bottom: 1px solid #f3f4f6;
-  transition: background-color 0.2s ease;
-}
-
-.bodyRow:hover {
-  background: #f9fafb;
-}
-
-.editable {
-  cursor: pointer;
-}
-
-.editable:hover {
-  background: #f0f9ff;
-}
-
-.bodyCell {
-  padding: 1rem;
-  color: #1f2937;
-  vertical-align: middle;
-  border-right: 1px solid #f3f4f6;
-}
-
-.bodyCell:last-child {
-  border-right: none;
-}
-
-.emptyState {
-  text-align: center;
-  color: #6b7280;
-  font-style: italic;
-  padding: 3rem 1rem;
-}
-
-/* Input editable */
-.editableInput {
+.filterInput,
+.filterSelect {
   width: 100%;
-  padding: 0.25rem 0.5rem;
-  border: 1px solid #d1d5db;
-  border-radius: 4px;
-  font-size: 0.875rem;
-  background: white;
-  color: #1f2937;
-  transition: border-color 0.2s ease;
+  padding: 6px 8px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 13px;
+  background: #fff;
+  transition: border-color 0.2s, box-shadow 0.2s;
 }
 
-.editableInput:focus {
+.filterInput:focus,
+.filterSelect:focus {
   outline: none;
-  border-color: #3b82f6;
-  ring: 1px solid #3b82f6;
+  border-color: #5b9cf3;
+  box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.15);
 }
 
-/* Paginación */
-.pagination {
+.singleSelect {
+  appearance: none;
+  background-image:
+    linear-gradient(45deg, transparent 50%, #7f8c8d 50%),
+    linear-gradient(135deg, #7f8c8d 50%, transparent 50%),
+    linear-gradient(to right, #ddd, #ddd);
+  background-position:
+    calc(100% - 16px) calc(1em - 2px),
+    calc(100% - 11px) calc(1em - 2px),
+    calc(100% - 2.2em) 0.5em;
+  background-size: 5px 5px, 5px 5px, 1px 60%;
+  background-repeat: no-repeat;
+}
+
+/* -------- Multiselect con popover -------- */
+
+.multiRoot {
+  position: relative;
+  z-index: 100;
+}
+
+.multiControl {
+  width: 100%;
+  min-height: 34px;
+  padding: 6px 32px 6px 8px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  background: #fff;
+  font-size: 13px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 1rem 1.5rem;
-  border-top: 1px solid #e5e7eb;
-  background: #f9fafb;
+  gap: 6px;
+  cursor: pointer;
+  transition: border-color 0.2s, box-shadow 0.2s;
 }
 
-.paginationInfo {
+.multiControl:hover {
+  border-color: #c9d6e2;
+}
+
+.multiControl:focus,
+.multiControl:focus-visible {
+  outline: none;
+  border-color: #5b9cf3;
+  box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.15);
+}
+
+.placeholder {
+  color: #8f9aa3;
+}
+
+.badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  background: #eef5ff;
+  color: #1e5cb3;
+  border: 1px solid #d6e6ff;
+  border-radius: 999px;
+  padding: 2px 8px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.moreBadge {
+  display: inline-flex;
+  align-items: center;
+  background: #f1f5f9;
+  color: #475569;
+  border: 1px solid #e2e8f0;
+  border-radius: 999px;
+  padding: 2px 8px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.caret {
+  position: absolute;
+  right: 10px;
+  width: 0; height: 0;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-top: 6px solid #7f8c8d;
+}
+
+/* Popover */
+.popover {
+  position: fixed;
+  top: auto;
+  left: auto;
+  width: 260px;
+  max-height: 220px;
+  background: #fff;
+  border: 1px solid #e3e8ef;
+  border-radius: 10px;
+  box-shadow:
+    0 10px 15px rgba(0, 0, 0, 0.06),
+    0 4px 6px rgba(0, 0, 0, 0.04);
+  z-index: 9999;
   display: flex;
   flex-direction: column;
-  gap: 0.25rem;
-  font-size: 0.875rem;
-  color: #6b7280;
+  overflow: hidden;
 }
 
-.paginationControls {
+.popoverHeader {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px;
+  border-bottom: 1px solid #eef2f7;
+  background: #f9fbfd;
+}
+
+.smallBtn {
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  color: #334155;
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 12px;
+  cursor: pointer;
+}
+.smallBtn:hover {
+  background: #f1f5f9;
+}
+
+.optionsList {
+  padding: 8px 4px;
+  overflow: auto;
+}
+
+.optionRow {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 8px;
+  padding: 6px 8px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+.optionRow:hover {
+  background: #f8fafc;
+}
+
+.checkbox {
+  width: 14px;
+  height: 14px;
+  cursor: pointer;
+}
+
+.optionLabel {
+  font-size: 13px;
+  color: #334155;
+}
+
+/* -------- Botón limpiar (para select simple) -------- */
+
+.clearButton {
+  padding: 0 8px;
+  height: 28px;
+  line-height: 28px;
+  border: 1px solid #ddd;
+  background: #fff;
+  border-radius: 6px;
+  font-size: 16px;
+  cursor: pointer;
+}
+.clearButton:hover {
+  background: #f3f4f6;
+}
+
+/* -------- Paginación -------- */
+
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding: 16px;
+  background: #f8f9fa;
+  border-top: 1px solid #e0e0e0;
+  border-radius: 0 0 12px 12px;
 }
 
 .paginationButton {
-  padding: 0.5rem 0.75rem;
-  border: 1px solid #d1d5db;
+  padding: 8px 16px;
+  background: #283760;
+  color: white;
+  border: none;
   border-radius: 6px;
-  background: white;
-  color: #374151;
-  font-size: 0.875rem;
-  font-weight: 500;
+  font-size: 14px;
   cursor: pointer;
-  transition: all 0.2s ease;
-  min-width: 40px;
+  transition: background 0.2s;
 }
-
 .paginationButton:hover:not(:disabled) {
-  background: #f3f4f6;
-  border-color: #9ca3af;
+  background: #435581;
 }
-
 .paginationButton:disabled {
-  opacity: 0.5;
+  background: #bdc3c7;
   cursor: not-allowed;
-  background: #f9fafb;
 }
 
-.pageSizeSelect {
-  padding: 0.5rem;
-  border: 1px solid #d1d5db;
-  border-radius: 6px;
-  background: white;
-  color: #374151;
-  font-size: 0.875rem;
-  cursor: pointer;
-  transition: border-color 0.2s ease;
+.pageInfo {
+  font-size: 14px;
+  color: #7f8c8d;
+  font-weight: 500;
 }
 
-.pageSizeSelect:focus {
-  outline: none;
-  border-color: #3b82f6;
+.clickableRow {
+  transition: background-color 0.15s ease;
 }
 
-/* --- POPUP "TIPO EXCEL" PARA MULTISELECT --- */
-.excelFilter { position: relative; }
-.excelFilterButton {
-  display: inline-flex; align-items: center; gap: .25rem;
-  padding: .375rem .5rem; border: 1px solid #4b5563; border-radius: 4px;
-  background: rgba(255,255,255,.1); color: #fff; font-size: .75rem;
+.clickableRow:hover {
+  background-color: #f9fafb;
 }
-.excelFilterButton:hover { background: rgba(255,255,255,.18); }
-.excelCaret { opacity: .8; font-size: .75rem; }
-
-.excelPopover {
-  position: absolute; 
-  z-index: 9999; /* Aumentamos significativamente el z-index */
-  top: 110%; 
-  left: 0;
-  width: 260px; 
-  max-height: 320px; 
-  overflow: hidden;
-  background: #ffffff; 
-  color: #111827;
-  border: 1px solid #d1d5db; 
-  border-radius: 8px;
-  box-shadow: 0 12px 32px rgba(0,0,0,.2); /* Sombra más prominente */
-}
-
-
-.excelSearchRow { padding: .5rem; border-bottom: 1px solid #e5e7eb; }
-.excelSearch {
-  width: 100%; padding: .5rem .625rem; font-size: .8rem;
-  border: 1px solid #d1d5db; border-radius: 6px;
-}
-
-.excelActions {
-  display:flex; gap:.5rem; padding:.5rem; border-bottom:1px solid #e5e7eb;
-}
-.excelActionBtn {
-  flex:1; padding:.4rem .5rem; font-size:.75rem; border:1px solid #d1d5db;
-  border-radius:6px; background:#fff; color:#374151;
-}
-.excelActionBtn:hover { background:#f9fafb; }
-
-.excelOptions { max-height: 220px; overflow:auto; padding:.25rem .5rem; }
-.excelOption {
-  display:flex; align-items:center; justify-content:space-between; gap:.5rem;
-  padding:.25rem .25rem; border-radius:6px; cursor:pointer;
-}
-.excelOption:hover { background:#f3f4f6; }
-.excelOption input { margin-right:.5rem; }
-.excelOptionText { flex: 1; font-size:.85rem; color:#111827; }
-.excelCount { font-size:.7rem; color:#6b7280; }
-.excelEmpty { padding:.75rem; text-align:center; color:#6b7280; font-size:.8rem; }
-
-/* Responsive */
-@media (max-width: 1024px) {
-  .tableHeader {
-    padding: 1rem;
-  }
-
-  .headerContent {
-    padding: 0.75rem;
-    gap: 0.375rem;
-  }
-
-  .bodyCell {
-    padding: 0.75rem;
-  }
-
-  .pagination {
-    padding: 0.75rem 1rem;
-    flex-direction: column;
-    gap: 1rem;
-  }
-
-  .paginationControls {
-    width: 100%;
-    justify-content: center;
-  }
-}
-
-@media (max-width: 768px) {
-  .tableContainer {
-    border-radius: 8px;
-  }
-
-  .tableHeader {
-    padding: 0.75rem;
-  }
-
-  .searchContainer {
-    max-width: none;
-  }
-
-  .globalFilter {
-    padding: 0.625rem 0.875rem;
-    padding-left: 2.25rem;
-  }
-
-  .headerContent {
-    padding: 0.5rem;
-  }
-
-  .headerText {
-    font-size: 0.75rem;
-  }
-
-  .columnFilter {
-    padding: 0.375rem;
-    font-size: 0.625rem;
-  }
-
-  .bodyCell {
-    padding: 0.5rem;
-    font-size: 0.75rem;
-  }
-
-  .table {
-    font-size: 0.75rem;
-  }
-
-  .paginationInfo {
-    text-align: center;
-    font-size: 0.75rem;
-  }
-
-  .paginationButton {
-    padding: 0.375rem 0.5rem;
-    font-size: 0.75rem;
-    min-width: 35px;
-  }
-
-  .pageSizeSelect {
-    padding: 0.375rem;
-    font-size: 0.75rem;
-  }
-}
-
-@media (max-width: 480px) {
-  .tableHeader {
-    padding: 0.5rem;
-  }
-
-  .globalFilter {
-    padding: 0.5rem 0.75rem;
-    padding-left: 2rem;
-    font-size: 0.75rem;
-  }
-
-  .searchIcon {
-    left: 0.5rem;
-    font-size: 0.875rem;
-  }
-
-  .headerContent {
-    padding: 0.375rem;
-    gap: 0.25rem;
-  }
-
-  .columnFilter {
-    padding: 0.25rem;
-  }
-
-  .bodyCell {
-    padding: 0.375rem;
-  }
-
-  .pagination {
-    padding: 0.5rem;
-  }
-
-  .paginationControls {
-    gap: 0.25rem;
-  }
-
-  .paginationButton {
-    padding: 0.25rem 0.375rem;
-    min-width: 30px;
-  }
-}
-
-/* Estados de carga y error */
-.loading {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 3rem;
-  color: #6b7280;
-}
-
-.error {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 3rem;
-  color: #dc2626;
-  background: #fef2f2;
-  border: 1px solid #fecaca;
-  border-radius: 8px;
-  margin: 1rem;
-}
-
-

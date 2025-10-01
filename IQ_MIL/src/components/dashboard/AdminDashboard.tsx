@@ -1,40 +1,64 @@
 import React, { useState, useMemo } from 'react';
 import styles from './AdminDashboard.module.css';
 import { AdminDashboard as AdminAssignator } from './Admin_Asignator';
-import { DataTable_2 } from '../ui/DataTable/DataTable_2';
+import { DataTable_2 } from '../ui/DataTable/DataTable';
 import type { ColumnDef } from '@tanstack/react-table';
 
-interface DataRecord {
+interface AdminRecord {
   id: number;
-  nombre: string;
-  categoria: string;
-  valor: number;
-  fecha: string;
+  radicado: string;
+  ips_nit: string;
+  ips_nombre: string;
+  factura: string;
+  valor_factura: number;
+  ruta_imagen: string;
+  caso: string;
+  fecha_asignacion: string;
+  total_servicios: number;
+  lider: string;
+  usuario_asignacion: string;
+  total_servicios_usuario: number;
   estado: string;
+  prioridad: string;
 }
 
 export const AdminDashboard = () => {
   const [activeSection, setActiveSection] = useState<'assign' | 'data' | null>(null);
   
-  const [tableData] = useState<DataRecord[]>([
-    { id: 1, nombre: 'Registro A', categoria: 'Ventas', valor: 1500, fecha: '2024-09-15', estado: 'Completado' },
-    { id: 2, nombre: 'Registro B', categoria: 'Marketing', valor: 2300, fecha: '2024-09-20', estado: 'Pendiente' },
-    { id: 3, nombre: 'Registro C', categoria: 'Operaciones', valor: 1800, fecha: '2024-09-22', estado: 'Completado' },
-    { id: 4, nombre: 'Registro D', categoria: 'Ventas', valor: 3200, fecha: '2024-09-25', estado: 'En Proceso' },
-    { id: 5, nombre: 'Registro E', categoria: 'Finanzas', valor: 2100, fecha: '2024-09-28', estado: 'Completado' },
+  const [tableData] = useState<AdminRecord[]>([
+    { id: 1, radicado: 'RAD-001', ips_nit: '123456789', ips_nombre: 'IPS Salud', factura: 'FACT-001', valor_factura: 1000000, ruta_imagen: '/images/factura1.jpg', caso: 'Caso 1', fecha_asignacion: '2024-09-01', total_servicios: 5, lider: 'Juan Pérez', usuario_asignacion: 'Ana Gómez', total_servicios_usuario: 3, estado: 'Asignado', prioridad: 'Alta' },
+    { id: 2, radicado: 'RAD-002', ips_nit: '987654321', ips_nombre: 'IPS Medicina', factura: 'FACT-002', valor_factura: 500000, ruta_imagen: '/images/factura2.jpg', caso: 'Caso 2', fecha_asignacion: '2024-09-05', total_servicios: 3, lider: 'María Rodríguez', usuario_asignacion: 'Carlos López', total_servicios_usuario: 2, estado: 'En Proceso', prioridad: 'Media' },
+    { id: 3, radicado: 'RAD-003', ips_nit: '111111111', ips_nombre: 'IPS Odontología', factura: 'FACT-003', valor_factura: 2000000, ruta_imagen: '/images/factura3.jpg', caso: 'Caso 3', fecha_asignacion: '2024-09-10', total_servicios: 4, lider: 'Luis Hernández', usuario_asignacion: 'Sofía García', total_servicios_usuario: 1, estado: 'Completado', prioridad: 'Baja' },
   ]);
 
-  const dataColumns = useMemo<ColumnDef<DataRecord>[]>(() => [
-    { accessorKey: 'id', header: 'ID', enableColumnFilter: false },
-    { accessorKey: 'nombre', header: 'Nombre', meta: { filterType: 'text' } },
-    { accessorKey: 'categoria', header: 'Categoría', meta: { filterType: 'select' } },
-    { accessorKey: 'valor', header: 'Valor', cell: ({ row }) => `$${row.getValue('valor')}` },
-    { accessorKey: 'fecha', header: 'Fecha', cell: ({ row }) => new Date(row.getValue('fecha')).toLocaleDateString('es-CO') },
-    { accessorKey: 'estado', header: 'Estado', meta: { filterType: 'select' } },
-    { accessorKey: 'estado', header: 'Estado', meta: { filterType: 'select' } },
-    { accessorKey: 'estado', header: 'Estado', meta: { filterType: 'select' } },
-    { accessorKey: 'estado', header: 'Estado', meta: { filterType: 'select' } },
-  ], []);
+  const adminColumns = useMemo<ColumnDef<AdminRecord>[]>(
+    () => [
+      { accessorKey: 'id', header: 'ID', enableColumnFilter: false },
+      { accessorKey: 'radicado', header: 'Radicado', meta: { filterType: 'text' } },
+      { accessorKey: 'ips_nit', header: 'IPS NIT', meta: { filterType: 'text' } },
+      { accessorKey: 'ips_nombre', header: 'IPS Nombre', meta: { filterType: 'text' } },
+      { accessorKey: 'factura', header: 'Factura', meta: { filterType: 'text' } },
+      {
+        accessorKey: 'valor_factura',
+        header: 'Valor Factura',
+        cell: ({ row }) => `$${(row.getValue('valor_factura') as number).toLocaleString('es-CO')}`,
+      },
+      { accessorKey: 'ruta_imagen', header: 'Ruta Imagen', meta: { filterType: 'text' } },
+      { accessorKey: 'caso', header: 'Caso', meta: { filterType: 'text' } },
+      {
+        accessorKey: 'fecha_asignacion',
+        header: 'Fecha Asignación',
+        cell: ({ row }) => new Date(row.getValue('fecha_asignacion')).toLocaleDateString('es-CO'),
+      },
+      { accessorKey: 'total_servicios', header: 'Total Servicios' },
+      { accessorKey: 'lider', header: 'Líder', meta: { filterType: 'text' } },
+      { accessorKey: 'usuario_asignacion', header: 'Usuario Asignación', meta: { filterType: 'text' } },
+      { accessorKey: 'total_servicios_usuario', header: 'Total Servicios Usuario' },
+      { accessorKey: 'estado', header: 'Estado', meta: { filterType: 'select' } },
+      { accessorKey: 'prioridad', header: 'Prioridad', meta: { filterType: 'select' } },
+    ], 
+    []
+  );
 
   if (activeSection === 'assign') {
     return (
@@ -59,11 +83,26 @@ export const AdminDashboard = () => {
         >
           ← Volver
         </button>
-        <h1>Cargar Datos</h1>
+        
+        <div className={styles.uploadSection}>
+          <div className={styles.uploadCard}>
+            <h3>Cargar Cuentas Medicas</h3>
+            <input 
+              type="file" 
+              accept=".xlsx,.xls"
+              className={styles.fileInput}
+              id="excelFile"
+            />
+            <label htmlFor="excelFile" className={styles.fileLabel}>
+              Seleccionar archivo
+            </label>
+          </div>
+        </div>
+
         <div className={styles.tableContainer}>
           <DataTable_2
             data={tableData}
-            columns={dataColumns}
+            columns={adminColumns}
             pageSize={10}
           />
         </div>
@@ -73,7 +112,7 @@ export const AdminDashboard = () => {
 
   return (
     <div className={styles.dashboard}>
-      <h1>Panel de Admin</h1>
+      <h1>Panel Administrador</h1>
       <div className={styles.content}>
         <section 
           className={styles.section}

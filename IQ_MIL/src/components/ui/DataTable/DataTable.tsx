@@ -1,145 +1,118 @@
-import React, { useState } from 'react';
-import {
-  useReactTable,
-  getCoreRowModel,
-  getFilteredRowModel,
-  getSortedRowModel,
-  getPaginationRowModel,
-  getFacetedRowModel,
-  getFacetedUniqueValues,
-  flexRender,
-} from '@tanstack/react-table';
-import type {
-  ColumnDef,
-  SortingState,
-  ColumnFiltersState,
-  VisibilityState,
-  Row,
+import { useEffect, useRef, useState, useMemo } from 'react';
+import {useReactTable,getCoreRowModel,getFilteredRowModel,getSortedRowModel,getPaginationRowModel,getFacetedRowModel,getFacetedUniqueValues,flexRender,
+  type ColumnDef,
+  type ColumnFiltersState,
+  type SortingState,
+  type FilterFn,
 } from '@tanstack/react-table';
 import styles from './DataTable.module.css';
 
-export interface DataTableProps<TData> {
-  data: TData[];
-  columns: ColumnDef<TData>[];
-  enableSorting?: boolean;
-  enableFiltering?: boolean;
-  enablePagination?: boolean;
-  enableEditing?: boolean;
+type FilterType = 'text' | 'select' | 'multiselect' | 'none';
+
+type ColumnMeta = {
+  filterType?: FilterType;
+  options?: Array<string | number | boolean>;
+};
+
+export interface DataTableProps<T extends Record<string, any>> {
+  data: T[];
+  columns: ColumnDef<T, any>[];
+  /** tamaño de página fijo (si no se pasa, 10) */
   pageSize?: number;
-  onRowEdit?: (row: Row<TData>) => void;
-  onDataChange?: (data: TData[]) => void;
   className?: string;
+  onRowClick?: (row: T) => void; // ← Nueva prop
 }
 
-export type FilterVariant = 'text' | 'single' | 'multi';
-export interface ColumnMeta {
-  filterVariant?: FilterVariant;
-  filterPlaceholder?: string;
-}
+/* ---------- FilterFns ---------- */
+const textFilterFn: FilterFn<any> = (row, columnId, value) => {
+  const v = String(row.getValue(columnId) ?? '').toLowerCase();
+  const needle = String(value ?? '').toLowerCase();
+  return v.includes(needle);
+};
+const selectFilterFn: FilterFn<any> = (row, columnId, value) => {
+  if (value == null || value === '') return true;
+  return String(row.getValue(columnId) ?? '') === String(value);
+};
+const multiselectFilterFn: FilterFn<any> = (row, columnId, value) => {
+  const arr = Array.isArray(value) ? value : [];
+  if (arr.length === 0) return true;
+  const cell = String(row.getValue(columnId) ?? '');
+  return arr.includes(cell);
+};
 
-export function DataTable<TData>({
+export function DataTable_2<T extends Record<string, any>>({
   data,
   columns,
-  enableSorting = true,
-  enableFiltering = true,
-  enablePagination = true,
-  enableEditing = false,
   pageSize = 10,
-  onRowEdit,
-  onDataChange,
   className = '',
-}: DataTableProps<TData>) {
-  const [sorting, setSorting] = useState<SortingState>([]);
+  onRowClick, // ← Recibe la prop
+}: DataTableProps<T>) {
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
-  const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
-  const [globalFilter, setGlobalFilter] = useState('');
+  const [sorting, setSorting] = useState<SortingState>([]);
+
+  const columnsWithFilters = useMemo<ColumnDef<T, any>[]>(() => {
+    return columns.map((c) => {
+      const meta = (c as any).meta as ColumnMeta | undefined;
+      const filterType: FilterType = meta?.filterType ?? 'text';
+      if ((c as any).filterFn) return c;
+      switch (filterType) {
+        case 'select': return { ...c, filterFn: selectFilterFn };
+        case 'multiselect': return { ...c, filterFn: multiselectFilterFn };
+        case 'none': return { ...c, enableColumnFilter: false };
+        case 'text':
+        default: return { ...c, filterFn: textFilterFn };
+      }
+    });
+  }, [columns]);
 
   const table = useReactTable({
     data,
-    columns,
-    getCoreRowModel: getCoreRowModel(),
-    getPaginationRowModel: enablePagination ? getPaginationRowModel() : undefined,
-    getSortedRowModel: enableSorting ? getSortedRowModel() : undefined,
-    getFilteredRowModel: enableFiltering ? getFilteredRowModel() : undefined,
-    getFacetedRowModel: enableFiltering ? getFacetedRowModel() : undefined,
-    getFacetedUniqueValues: enableFiltering ? getFacetedUniqueValues() : undefined,
-
-    // (Opcional) puedes dejar esto o eliminarlo; ya no dependemos del id string en las columnas
-    filterFns: {
-      multiSelect: (row, columnId, filterValues: string[]) => {
-        if (!Array.isArray(filterValues) || filterValues.length === 0) return true;
-        const v = String(row.getValue(columnId) ?? '');
-        return filterValues.includes(v);
-      },
-      singleSelect: (row, columnId, filterValue?: string) => {
-        if (!filterValue) return true;
-        const v = String(row.getValue(columnId) ?? '');
-        return v === String(filterValue);
-      },
-    },
-
-    onSortingChange: setSorting,
+    columns: columnsWithFilters,
+    state: { columnFilters, sorting },
     onColumnFiltersChange: setColumnFilters,
-    onColumnVisibilityChange: setColumnVisibility,
-    onGlobalFilterChange: setGlobalFilter,
-    state: { sorting, columnFilters, columnVisibility, globalFilter },
+    onSortingChange: setSorting,
+    getCoreRowModel: getCoreRowModel(),
+    getFilteredRowModel: getFilteredRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
+    getFacetedRowModel: getFacetedRowModel(),
+    getFacetedUniqueValues: getFacetedUniqueValues(),
     initialState: { pagination: { pageSize } },
   });
 
-  const handleCellEdit = (rowIndex: number, columnId: string, value: any) => {
-    if (!onDataChange) return;
-    const newData = [...data];
-    (newData[rowIndex] as any)[columnId] = value;
-    onDataChange(newData);
-  };
+  useEffect(() => {
+    if (table.getState().pagination.pageSize !== pageSize) {
+      table.setPageSize(pageSize);
+    }
+  }, [pageSize, table]);
+
+  const rows = table.getRowModel().rows;
+  const pad = Math.max(0, table.getState().pagination.pageSize - rows.length);
+  const colSpan = table.getVisibleLeafColumns().length;
 
   return (
     <div className={`${styles.tableContainer} ${className}`}>
-      {enableFiltering && (
-        <div className={styles.tableHeader}>
-          <div className={styles.searchContainer}>
-            <input
-              type="text"
-              placeholder="Buscar en toda la tabla..."
-              value={globalFilter ?? ''}
-              onChange={(e) => setGlobalFilter(e.target.value)}
-              className={styles.globalFilter}
-            />
-            <div className={styles.searchIcon}>🔍</div>
-          </div>
-        </div>
-      )}
-
       <div className={styles.tableWrapper}>
         <table className={styles.table}>
-          <thead className={styles.tableHead}>
-            {table.getHeaderGroups().map((hg) => (
-              <tr key={hg.id} className={styles.headerRow}>
-                {hg.headers.map((header) => (
-                  <th key={header.id} className={styles.headerCell}>
+          <thead>
+            {table.getHeaderGroups().map((headerGroup) => (
+              <tr key={headerGroup.id}>
+                {headerGroup.headers.map((header) => (
+                  <th key={header.id} className={styles.th}>
                     <div className={styles.headerContent}>
                       <div
-                        className={`${styles.headerText} ${
-                          header.column.getCanSort() ? styles.sortable : ''
-                        }`}
+                        className={styles.headerLabel}
                         onClick={header.column.getToggleSortingHandler()}
+                        style={{ cursor: header.column.getCanSort() ? 'pointer' : 'default' }}
                       >
-                        {header.isPlaceholder
-                          ? null
-                          : flexRender(header.column.columnDef.header, header.getContext())}
-                        {header.column.getCanSort() && (
+                        {flexRender(header.column.columnDef.header, header.getContext())}
+                        {header.column.getIsSorted() && (
                           <span className={styles.sortIcon}>
-                            {{
-                              asc: ' 🔼',
-                              desc: ' 🔽',
-                            }[header.column.getIsSorted() as string] ?? ' ↕️'}
+                            {header.column.getIsSorted() === 'asc' ? ' ↑' : ' ↓'}
                           </span>
                         )}
                       </div>
-
-                      {enableFiltering && header.column.getCanFilter() ? (
-                        <DataTableColumnFilter column={header.column} />
-                      ) : null}
+                      {header.column.getCanFilter() && <Filter column={header.column} />}
                     </div>
                   </th>
                 ))}
@@ -147,218 +120,198 @@ export function DataTable<TData>({
             ))}
           </thead>
 
-          <tbody className={styles.tableBody}>
-            {table.getRowModel().rows?.length ? (
-              table.getRowModel().rows.map((row) => (
-                <tr
-                  key={row.id}
-                  className={`${styles.bodyRow} ${enableEditing ? styles.editable : ''}`}
-                  onClick={() => enableEditing && onRowEdit?.(row)}
-                >
-                  {row.getVisibleCells().map((cell) => (
-                    <td key={cell.id} className={styles.bodyCell}>
-                      {enableEditing ? (
-                        <EditableCell
-                          value={cell.getValue()}
-                          row={row}
-                          column={cell.column}
-                          onEdit={handleCellEdit}
-                        />
-                      ) : (
-                        flexRender(cell.column.columnDef.cell, cell.getContext())
-                      )}
-                    </td>
-                  ))}
-                </tr>
-              ))
-            ) : (
-              <tr>
-                <td colSpan={columns.length} className={`${styles.bodyCell} ${styles.emptyState}`}>
-                  No se encontraron resultados.
-                </td>
+          <tbody>
+            {rows.map((row) => (
+              <tr 
+                key={row.id} 
+                className={`${styles.tr} ${onRowClick ? styles.clickableRow : ''}`}
+                onClick={() => onRowClick?.(row.original)} // ← Click handler
+                style={{ cursor: onRowClick ? 'pointer' : 'default' }}
+              >
+                {row.getVisibleCells().map((cell) => (
+                  <td key={cell.id} className={styles.td}>
+                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                  </td>
+                ))}
               </tr>
-            )}
+            ))}
+
+            {/* Relleno para mantener altura consistente */}
+            {Array.from({ length: pad }).map((_, i) => (
+              <tr key={`pad-${i}`} className={styles.padRow}>
+                <td className={styles.padCell} colSpan={colSpan} />
+              </tr>
+            ))}
           </tbody>
         </table>
       </div>
 
-      {enablePagination && (
-        <div className={styles.pagination}>
-          <div className={styles.paginationInfo}>
-            <span>
-              Página {table.getState().pagination.pageIndex + 1} de {table.getPageCount()}
-            </span>
-            <span>({table.getFilteredRowModel().rows.length} registros)</span>
-          </div>
-          <div className={styles.paginationControls}>
-            <button
-              onClick={() => table.setPageIndex(0)}
-              disabled={!table.getCanPreviousPage()}
-              className={styles.paginationButton}
-            >
-              {'<<'}
-            </button>
-            <button
-              onClick={() => table.previousPage()}
-              disabled={!table.getCanPreviousPage()}
-              className={styles.paginationButton}
-            >
-              {'<'}
-            </button>
-            <button
-              onClick={() => table.nextPage()}
-              disabled={!table.getCanNextPage()}
-              className={styles.paginationButton}
-            >
-              {'>'}
-            </button>
-            <button
-              onClick={() => table.setPageIndex(table.getPageCount() - 1)}
-              disabled={!table.getCanNextPage()}
-              className={styles.paginationButton}
-            >
-              {'>>'}
-            </button>
-            <select
-              value={table.getState().pagination.pageSize}
-              onChange={(e) => table.setPageSize(Number(e.target.value))}
-              className={styles.pageSizeSelect}
-            >
-              {[10, 20, 30, 40, 50].map((ps) => (
-                <option key={ps} value={ps}>
-                  Mostrar {ps}
-                </option>
-              ))}
-            </select>
-          </div>
-        </div>
-      )}
+      <div className={styles.pagination}>
+        <button
+          onClick={() => table.previousPage()}
+          disabled={!table.getCanPreviousPage()}
+          className={styles.paginationButton}
+        >
+          Anterior
+        </button>
+
+        <span className={styles.pageInfo}>
+          Página {table.getState().pagination.pageIndex + 1} de {table.getPageCount()}
+        </span>
+
+        <button
+          onClick={() => table.nextPage()}
+          disabled={!table.getCanNextPage()}
+          className={styles.paginationButton}
+        >
+          Siguiente
+        </button>
+      </div>
     </div>
   );
 }
 
-interface EditableCellProps {
-  value: any;
-  row: Row<any>;
-  column: any;
-  onEdit: (rowIndex: number, columnId: string, value: any) => void;
-}
+/* ---------- Filter component ---------- */
+function Filter({ column }: { column: any }) {
+  const columnFilterValue = column.getFilterValue();
+  const meta: ColumnMeta | undefined = column.columnDef?.meta;
+  const filterType: FilterType = meta?.filterType ?? 'text';
 
-function EditableCell({ value: initialValue, row, column, onEdit }: EditableCellProps) {
-  const [value, setValue] = useState(initialValue);
-  const onBlur = () => onEdit(row.index, column.id, value);
+  const [open, setOpen] = useState(false);
+  const rootRef = useRef<HTMLDivElement | null>(null);
+  const [popoverPos, setPopoverPos] = useState({ top: 0, left: 0 });
+
+  useEffect(() => {
+    function onDocClick(e: MouseEvent) {
+      if (!rootRef.current) return;
+      if (!rootRef.current.contains(e.target as Node)) setOpen(false);
+    }
+    document.addEventListener('mousedown', onDocClick);
+    return () => document.removeEventListener('mousedown', onDocClick);
+  }, []);
+
+  useEffect(() => {
+    if (open && rootRef.current) {
+      const rect = rootRef.current.getBoundingClientRect();
+      setPopoverPos({
+        top: rect.bottom + 6,
+        left: rect.left,
+      });
+    }
+  }, [open]);
+
+  const map = column.getFacetedUniqueValues?.();
+  const faceted = map ? Array.from(map.keys()).map((v: any) => String(v ?? '')) : [];
+  const base = [...new Set(faceted)].sort((a, b) => a.localeCompare(b));
+  const ordered = base.filter((x) => x !== '');
+  if (base.includes('')) ordered.push('');
+
+  const uniqueValues: string[] = meta?.options?.length
+    ? (meta.options as any[]).map((v) => String(v ?? '')).filter((v) => ordered.includes(v))
+    : ordered;
+
+  if (filterType === 'none') return null;
+
+  if (filterType === 'select') {
+    return (
+      <div className={styles.filterWrap}>
+        <select
+          className={`${styles.filterSelect} ${styles.singleSelect}`}
+          value={(columnFilterValue as string) ?? ''}
+          onChange={(e) => column.setFilterValue(e.target.value || undefined)}
+        >
+          <option value="">Todos</option>
+          {uniqueValues.map((value) => (
+            <option key={value || '__empty__'} value={value}>
+              {value || '— vacío —'}
+            </option>
+          ))}
+        </select>
+
+        {(columnFilterValue ?? '') !== '' && (
+          <button
+            type="button"
+            className={styles.clearButton}
+            onClick={() => column.setFilterValue(undefined)}
+            title="Limpiar filtro"
+          >
+            ×
+          </button>
+        )}
+      </div>
+    );
+  }
+
+  if (filterType === 'multiselect') {
+    const selected = (Array.isArray(columnFilterValue) ? columnFilterValue : []) as string[];
+    const toggleValue = (val: string) => {
+      const next = selected.includes(val) ? selected.filter((v) => v !== val) : [...selected, val];
+      column.setFilterValue(next.length ? next : undefined);
+    };
+
+    return (
+      <div className={styles.multiRoot} ref={rootRef}>
+        <button
+          type="button"
+          className={styles.multiControl}
+          onClick={() => setOpen((o) => !o)}
+          title="Filtrar (multiselección)"
+        >
+          {selected.length === 0 ? (
+            <span className={styles.placeholder}>Todos</span>
+          ) : (
+            <div className={styles.badges}>
+              {selected.slice(0, 3).map((v) => (
+                <span key={v} className={styles.badge}>{v}</span>
+              ))}
+              {selected.length > 3 && <span className={styles.moreBadge}>+{selected.length - 3}</span>}
+            </div>
+          )}
+          <span className={styles.caret} />
+        </button>
+
+        {open && (
+          <div className={styles.popover}>
+            <div className={styles.popoverHeader}>
+              <button type="button" className={styles.smallBtn} onClick={() => column.setFilterValue(undefined)}>
+                Limpiar
+              </button>
+              <button type="button" className={styles.smallBtn} onClick={() => setOpen(false)}>
+                Cerrar
+              </button>
+            </div>
+
+            <div className={styles.optionsList}>
+              {uniqueValues.map((value) => {
+                const id = `${column.id}__${value || 'empty'}`;
+                const checked = selected.includes(value);
+                return (
+                  <label key={id} className={styles.optionRow}>
+                    <input
+                      id={id}
+                      type="checkbox"
+                      className={styles.checkbox}
+                      checked={checked}
+                      onChange={() => toggleValue(value)}
+                    />
+                    <span className={styles.optionLabel}>{value || '— vacío —'}</span>
+                  </label>
+                );
+              })}
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  }
+
   return (
     <input
-      value={value ?? ''}
-      onChange={(e) => setValue(e.target.value)}
-      onBlur={onBlur}
-      className={styles.editableInput}
+      type="text"
+      className={styles.filterInput}
+      value={(columnFilterValue ?? '') as string}
+      onChange={(e) => column.setFilterValue(e.target.value || undefined)}
+      placeholder="Filtrar..."
     />
-  );
-}
-
-function DataTableColumnFilter({ column }: { column: any }) {
-  const meta = (column.columnDef.meta ?? {}) as { filterVariant?: 'text' | 'single' | 'multi'; filterPlaceholder?: string };
-  const variant = meta.filterVariant ?? 'text';
-  const faceted = column.getFacetedUniqueValues?.() as Map<any, number> | undefined;
-  const value = column.getFilterValue();
-
-  if (variant === 'text') {
-    return (
-      <input
-        type="text"
-        value={(value ?? '') as string}
-        onChange={(e) => column.setFilterValue(e.target.value)}
-        placeholder={meta.filterPlaceholder ?? 'Filtrar...'}
-        className={styles.columnFilter}
-        onClick={(e) => e.stopPropagation()}
-      />
-    );
-  }
-
-  if (variant === 'single') {
-    const options = faceted ? Array.from(faceted.keys()).map(String).sort() : [];
-    return (
-      <select
-        value={(value as string) ?? ''}
-        onChange={(e) => column.setFilterValue(e.target.value || undefined)}
-        className={styles.columnFilter}
-        onClick={(e) => e.stopPropagation()}
-      >
-        <option value="">(Todos)</option>
-        {options.map((opt) => (
-          <option key={opt} value={opt}>
-            {opt}
-          </option>
-        ))}
-      </select>
-    );
-  }
-
-  const selected: string[] = Array.isArray(value) ? value : [];
-  const [open, setOpen] = React.useState(false);
-  const [q, setQ] = React.useState('');
-  const options = faceted
-    ? Array.from(faceted.entries())
-        .map(([k, count]) => ({ label: String(k ?? ''), count }))
-        .filter((o) => o.label.toLowerCase().includes(q.toLowerCase()))
-        .sort((a, b) => a.label.localeCompare(b.label))
-    : [];
-
-  const toggle = (opt: string) => {
-    const set = new Set(selected);
-    set.has(opt) ? set.delete(opt) : set.add(opt);
-    const arr = Array.from(set);
-    column.setFilterValue(arr.length ? arr : undefined);
-  };
-
-  const allVisible = options.map((o) => o.label);
-  const selectAll = () => {
-    const set = new Set([...selected, ...allVisible]);
-    column.setFilterValue(Array.from(set));
-  };
-  const clearAll = () => {
-    if (q) {
-      const keep = selected.filter((s) => !allVisible.includes(s));
-      column.setFilterValue(keep.length ? keep : undefined);
-    } else {
-      column.setFilterValue(undefined);
-    }
-  };
-
-  return (
-    <div className={styles.excelFilter} onClick={(e) => e.stopPropagation()}>
-      <button type="button" className={styles.excelFilterButton} onClick={() => setOpen((v) => !v)} aria-expanded={open}>
-        {selected.length ? `(${selected.length})` : 'Filtrar'}
-        <span className={styles.excelCaret}>▾</span>
-      </button>
-      {open && (
-        <div className={styles.excelPopover}>
-          <div className={styles.excelSearchRow}>
-            <input
-              type="text"
-              value={q}
-              onChange={(e) => setQ(e.target.value)}
-              placeholder={meta.filterPlaceholder ?? 'Buscar opción...'}
-              className={styles.excelSearch}
-            />
-          </div>
-          <div className={styles.excelActions}>
-            <button type="button" onClick={selectAll} className={styles.excelActionBtn}>Seleccionar todo</button>
-            <button type="button" onClick={clearAll} className={styles.excelActionBtn}>Limpiar</button>
-          </div>
-          <div className={styles.excelOptions}>
-            {options.map(({ label, count }) => (
-              <label key={label} className={styles.excelOption}>
-                <input type="checkbox" checked={selected.includes(label)} onChange={() => toggle(label)} />
-                <span className={styles.excelOptionText}>{label}</span>
-                <span className={styles.excelCount}>{count}</span>
-              </label>
-            ))}
-            {!options.length && <div className={styles.excelEmpty}>Sin opciones</div>}
-          </div>
-        </div>
-      )}
-    </div>
   );
 }

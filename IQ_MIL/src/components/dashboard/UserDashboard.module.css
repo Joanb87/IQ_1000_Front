@@ -1,42 +1,402 @@
 .dashboard {
-  padding: 1rem;
-}
-
-.content {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 2rem;
-  margin-top: 2rem;
-}
-
-.section {
-  background: rgb(255, 255, 255);
-  border-radius: 10px;
-  /* padding: 0.1rem; */
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  padding: 1.5rem;
+  min-height: 100vh;
 }
 
 h1 {
-  color: #2c3e50;
-  margin-bottom: 2rem;
+  color: #1f2937;
+  font-size: 2rem;
+  font-weight: 700;
+  text-align: center;
 }
 
-h2 {
-  color: #34495e;
-  margin-bottom: 1rem;
-  font-size: 1.25rem;
+.content {
+  max-width: 1900px;
+  margin: 0 auto;
 }
 
-/* Estilos específicos para el panel de usuario */
 .section {
-  transition: transform 0.2s ease;
+  background: transparent;
+  border-radius: 16px;
+  overflow: hidden;
 }
 
-.section:hover {
+.tableHeader {
+  padding: 1rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1.5rem;
+  background: transparent;
+}
+
+.statsContainer {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex: 1;
+}
+
+.dateFilter {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.dateInput {
+  padding: 0.5rem 0.75rem;
+  border: 2px solid #e5e7eb;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  transition: all 0.2s ease;
+}
+
+.dateInput:focus {
+  outline: none;
+  border-color: #ee1b22;
+}
+
+.clearDateButton {
+  background: #f3f4f6;
+  border: none;
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  font-size: 1.25rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.clearDateButton:hover {
+  background: #e5e7eb;
+}
+
+.statsCards {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.statCard {
+  min-width: 90px;
+  padding: 0.55rem 1.5rem;
+  background: white;
+  border-radius: 10px;
+  text-align: center;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+  transition: transform 0.2s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.statCard::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+}
+
+.statCard:hover {
   transform: translateY(-2px);
 }
 
-/* Estilos para los indicadores de progreso */
-.progressSection {
-  background: linear-gradient(to right bottom, #ffffff, #f8f9fa);
+.statCount {
+  font-size: 1.75rem;
+  font-weight: 700;
+  line-height: 1;
+  margin-bottom: 0.15rem;
+  color: #1f2937;
+}
+
+.statLabel {
+  font-size: 0.6rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #6b7280;
+}
+
+.stat_liquidado::after {
+  background: #10b981;
+}
+
+.stat_inconsistencia::after {
+  background: #f59e0b;
+}
+
+.stat_devolucion::after {
+  background: #ef4444;
+}
+
+.stat_nocompletado::after {
+  background: #6366f1;
+}
+
+.newCaseButton {
+  background: #ed1b22;
+  color: white;
+  border: none;
+  padding: 0.6rem 2rem;
+  border-radius: 10px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(238, 27, 34, 0.25);
+  white-space: nowrap;
+}
+
+.newCaseButton:hover:not(:disabled) {
+  background: #ff4147;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(238, 27, 34, 0.35);
+}
+
+.newCaseButton:disabled {
+  background: #9ca3af;
+  cursor: not-allowed;
+  opacity: 0.6;
+  box-shadow: none;
+}
+
+.tableContainer {
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.nameCell {
+  color: #1f2937;
+}
+
+.statusBadge {
+  display: inline-block;
+  padding: 0.375rem 0.875rem;
+  border-radius: 12px;
+  font-size: 0.65rem;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.liquidado {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.inconsistencia {
+  background: #fed7aa;
+  color: #92400e;
+}
+
+.devolucion {
+  background: #fecaca;
+  color: #991b1b;
+}
+
+.nocompletado {
+  background: #e0e7ff;
+  color: #3730a3;
+}
+
+/* Modal Styles */
+.modalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  backdrop-filter: blur(4px);
+}
+
+.modalContent {
+  background: white;
+  border-radius: 16px;
+  width: 90%;
+  max-width: 500px;
+  max-height: 85vh;
+  overflow-y: auto;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+}
+
+.modalHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.modalHeader h2 {
+  color: #1f2937;
+  font-size: 1.1rem;
+  font-weight: 700;
+  margin: 0;
+}
+
+.closeButton {
+  background: none;
+  border: none;
+  font-size: 2rem;
+  color: #6b7280;
+  cursor: pointer;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+}
+
+.closeButton:hover {
+  background: #f3f4f6;
+  color: #1f2937;
+}
+
+.modalBody {
+  padding: 0 1rem 1rem 1rem;
+}
+
+.infoRow {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.75rem 0;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.label {
+  font-weight: 600;
+  color: #6b7280;
+}
+
+.value {
+  color: #1f2937;
+  font-weight: 500;
+}
+
+.formGroup {
+  margin-top: 1.5rem;
+}
+
+.formLabel {
+  display: block;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 0.5rem;
+}
+
+.formInput,
+.formSelect {
+  width: 100%;
+  padding: 0.55rem;
+  border: 2px solid #e5e7eb;
+  border-radius: 8px;
+  font-size: 1rem;
+  transition: all 0.2s ease;
+}
+
+.formInput:focus,
+.formSelect:focus {
+  outline: none;
+  border-color: #ee1b22;
+  box-shadow: 0 0 0 3px rgba(238, 27, 34, 0.1);
+}
+
+.modalFooter {
+  display: flex;
+  gap: 1rem;
+  padding: 1.5rem;
+  border-top: 1px solid #e5e7eb;
+}
+
+.cancelButton,
+.saveButton {
+  flex: 1;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: none;
+}
+
+.cancelButton {
+  background: #f3f4f6;
+  color: #374151;
+}
+
+.cancelButton:hover {
+  background: #e5e7eb;
+}
+
+.saveButton {
+  background: #ed1b22;
+  color: white;
+  box-shadow: 0 4px 12px rgba(238, 27, 34, 0.25);
+}
+
+.saveButton:hover:not(:disabled) {
+  background: #ff3239;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(238, 27, 34, 0.35);
+}
+
+.saveButton:disabled {
+  background: #9ca3af;
+  cursor: not-allowed;
+  opacity: 0.6;
+  box-shadow: none;
+}
+
+@media (max-width: 1200px) {
+  .statsCards {
+    flex-wrap: wrap;
+  }
+}
+
+@media (max-width: 768px) {
+  .dashboard {
+    padding: 1rem;
+  }
+
+  h1 {
+    font-size: 1.5rem;
+  }
+
+  .tableHeader {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .statsContainer {
+    flex-direction: column;
+  }
+
+  .statsCards {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .newCaseButton {
+    padding: 0.75rem 1.5rem;
+    font-size: 0.875rem;
+  }
+
+  .modalContent {
+    width: 95%;
+  }
+
+  .modalFooter {
+    flex-direction: column;
+  }
 }

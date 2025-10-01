@@ -1,7 +1,6 @@
 import { api } from './api';
 
 export const userService = {
-  // Métodos específicos para el usuario
   async getUserTasks() {
     return api.fetchWithAuth('/user/tasks');
   },
@@ -14,6 +13,20 @@ export const userService = {
     return api.fetchWithAuth('/user/tasks/status', {
       method: 'PUT',
       body: JSON.stringify({ taskId, status })
+    });
+  },
+
+  async createNewCase(caseData?: any) {
+    return api.fetchWithAuth('/user/cases/create', {
+      method: 'POST',
+      body: JSON.stringify(caseData || {})
+    });
+  },
+
+  async updateCase(caseId: number, data: { total_servicios: number; estado: string }) {
+    return api.fetchWithAuth(`/user/cases/${caseId}`, {
+      method: 'PUT',
+      body: JSON.stringify(data)
     });
   }
 };
