@@ -1,0 +1,130 @@
+/* ===== Tokens del tema (variables CSS) ===== */
+:root {
+  /* Primarios */
+  --primary-50:  #eff6ff;
+  --primary-100: #dbeafe;
+  --primary-200: #bfdbfe;
+  --primary-300: #93c5fd;
+  --primary-400: #60a5fa;
+  --primary-500: #3b82f6;
+  --primary-600: #2563eb;
+  --primary-700: #1d4ed8;
+  --primary-800: #1e40af;
+  --primary-900: #1e3a8a;
+
+  /* Secundarios / neutros */
+  --secondary-50:  #f9fafb;
+  --secondary-100: #f3f4f6;
+  --secondary-200: #e5e7eb;
+  --secondary-300: #d1d5db;
+  --secondary-400: #9ca3af;
+  --secondary-500: #6b7280;
+  --secondary-600: #4b5563;
+  --secondary-700: #374151;
+  --secondary-800: #1f2937;
+  --secondary-900: #111827;
+
+  /* Extras usados en tus estilos tipo Tailwind */
+  --slate-50:  #f8fafc;
+  --slate-100: #f1f5f9;
+  --slate-200: #e2e8f0;
+  --slate-300: #cbd5e1;
+  --slate-400: #94a3b8;
+  --slate-500: #64748b;
+  --slate-600: #475569;
+  --slate-700: #334155;
+  --slate-800: #1e293b;
+  --slate-900: #0f172a;
+
+  --blue-600: #2563eb;
+
+  /* Altura del header si la necesitas para cálculos */
+  --header-h: 64px;
+}
+
+/* ===== Global/base ===== */
+html, body, #root { height: 100%; }
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background: var(--secondary-50);
+  color: var(--secondary-800);
+}
+
+/* ===== Estilos “Tabulator-like” que tenías con theme() ===== */
+.custom-tabulator .tabulator {
+  border: 1px solid var(--slate-200);
+  border-radius: 1rem;
+  box-shadow: 0 10px 20px -10px rgba(0,0,0,.08);
+}
+
+.custom-tabulator .tabulator-header {
+  position: sticky;
+  top: 0;
+  backdrop-filter: saturate(120%) blur(2px);
+  background: linear-gradient(
+    to right,
+    var(--slate-50),
+    color-mix(in oklab, var(--slate-100) 80%, transparent)
+  );
+  border-bottom: 1px solid var(--slate-200);
+}
+
+.custom-tabulator .tabulator-col,
+.custom-tabulator .tabulator-col .tabulator-col-content {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: .02em;
+  color: var(--slate-600);
+  text-transform: uppercase;
+}
+
+/* Filas: zebra + hover */
+.custom-tabulator .tabulator-row:nth-child(even) {
+  background-color: var(--slate-50);
+}
+.custom-tabulator .tabulator-row:hover {
+  background-color: var(--slate-100);
+}
+
+/* Celdas */
+.custom-tabulator .tabulator-cell {
+  border-right: 1px solid var(--slate-100);
+  color: var(--slate-700);
+}
+
+/* Paginador */
+.custom-tabulator .tabulator-footer {
+  border-top: 1px solid var(--slate-200);
+  background: var(--slate-50);
+}
+.custom-tabulator .tabulator-paginator label,
+.custom-tabulator .tabulator-pages {
+  font-size: 12px;
+  color: var(--slate-600);
+}
+.custom-tabulator .tabulator-page {
+  border: 1px solid var(--slate-300);
+  background: white;
+  border-radius: .5rem;
+  padding: .25rem .5rem;
+}
+.custom-tabulator .tabulator-page.active {
+  background: var(--blue-600);
+  color: white;
+  border-color: var(--blue-600);
+}
+
+/* Densidad */
+.tabulator-wrapper.is-compact .tabulator .tabulator-cell { padding: .375rem .75rem; font-size: 0.875rem; }
+.tabulator-wrapper.is-compact .tabulator .tabulator-row { min-height: 34px; }
+.tabulator-wrapper.is-comfy .tabulator .tabulator-cell { padding: .5rem 1rem; font-size: 0.95rem; }
+.tabulator-wrapper.is-comfy .tabulator .tabulator-row { min-height: 42px; }
+
+/* Checkbox selección */
+.custom-tabulator input[type="checkbox"] {
+  width: 16px; height: 16px; accent-color: var(--blue-600);
+}

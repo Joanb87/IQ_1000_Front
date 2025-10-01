@@ -1,0 +1,69 @@
+.socialSection {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.socialText {
+  color: #6b7280;
+  font-size: 0.875rem;
+  position: relative;
+}
+
+.socialText::before,
+.socialText::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  width: 60px;
+  height: 1px;
+  background: #e5e7eb;
+}
+
+.socialText::before {
+  left: -80px;
+}
+
+.socialText::after {
+  right: -80px;
+}
+
+.socialButtons {
+  display: flex;
+  width: 100%;
+}
+
+.errorMessage {
+  color: #dc2626;
+  font-size: 0.875rem;
+  text-align: center;
+  padding: 0.5rem;
+  border-radius: 0.25rem;
+  background-color: #fee2e2;
+  border: 1px solid #fecaca;
+  width: 100%;
+}
+
+.socialBtn {
+  width: 100%;
+  padding: 0.75rem 1.5rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.5rem;
+  background: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  color: #1f2937;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.socialBtn:hover {
+  background: #f9fafb;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}

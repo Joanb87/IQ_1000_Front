@@ -1,0 +1,55 @@
+.signupForm {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  width: 100%;
+}
+
+.signupForm input[type="email"],
+.signupForm input[type="password"] {
+  padding: 0.5rem 0.75rem !important;
+  font-size: 0.875rem !important;
+  height: auto !important;
+  min-height: 2rem !important; /* Altura fija más pequeña */
+}
+.submitButton {
+  background: #3b82f6;
+  color: white;
+  border: none;
+  padding: 0.575rem 0.7rem;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-top: 0.5rem;
+  width: 100%;
+}
+
+.submitButton:hover {
+  background: #2563eb;
+  transform: translateY(-1px);
+}
+
+@media (max-width: 768px) {
+  .signupForm {
+    gap: 1.25rem;
+  }
+  
+  .submitButton {
+    padding: 0.75rem;
+    font-size: 0.8125rem;
+    margin-top: 0.25rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .signupForm {
+    gap: 1rem;
+  }
+  
+  .submitButton {
+    padding: 0.625rem;
+    font-size: 0.75rem;
+  }
+}

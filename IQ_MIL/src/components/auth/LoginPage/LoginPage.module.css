@@ -1,0 +1,170 @@
+
+.loginContainer {
+  display: flex;
+  height: 100vh;
+  width: 100%;
+}
+
+.formSection {
+  flex: 0.4;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: white;
+  padding: 2rem;
+  min-height: 100vh;
+}
+
+.formContent {
+  width: 100%;
+  max-width: 400px;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 2rem;
+}
+
+.logoImg {
+  height: 60px;
+  width: auto;
+  object-fit: contain;
+}
+
+.headerText {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  text-align: center;
+}
+
+
+
+@keyframes slideInTitle {
+  0% {
+    transform: translateX(-100%);
+    opacity: 0;
+  }
+  100% {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes lightSweep {
+  0% {
+    background-position: 200% center;
+  }
+  100% {
+    background-position: -200% center;
+  }
+}
+
+.journeyText {
+  font-size: 2rem;
+  font-weight: 500;
+  animation: slideInTitle 1.8s ease-out forwards;
+  background: linear-gradient(
+    90deg,
+    #282d3a 0%,
+    #2c5bff 50%,
+    #040508 100%
+  );
+  background-size: 200% auto;
+  color: transparent;
+  -webkit-background-clip: text;
+  background-clip: text;
+  position: relative;
+}
+
+.journeyText.animate {
+  animation: slideInTitle 1.8s ease-out forwards, lightSweep 2s ease-in-out 1s;
+}
+
+
+.mainTitle {
+  color: #1f2937;
+  font-size: 1.875rem;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.signInLink {
+  text-align: center;
+  font-size: 0.875rem;
+  color: #6b7280;
+}
+
+.signInText {
+  color: #3b82f6;
+  text-decoration: none;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.signInText:hover {
+  text-decoration: underline;
+}
+
+@media (max-width: 1024px) {
+  .formSection {
+    flex: 0.5;
+  }
+  
+  .logoImg {
+    height: 60px;
+  }
+  
+  .mainTitle {
+    font-size: 1.5rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .loginContainer {
+    flex-direction: column;
+  }
+  
+  .formSection {
+    flex: none;
+    min-height: auto;
+    padding: 1.5rem;
+    order: 2;
+  }
+
+  .logo {
+    gap: 1rem;
+  }
+  
+  .logoImg {
+    height: 50px;
+  }
+  
+  .mainTitle {
+    font-size: 1.25rem;
+  }
+  
+  .formContent {
+    gap: 1.5rem;
+  }
+
+
+@media (max-width: 480px) {
+  .formSection {
+    padding: 1rem;
+  }
+  
+  .logo {
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+  
+  .logoImg {
+    height: 40px;
+  }
+}}

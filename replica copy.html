@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>InsideBox - Sign Up</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    .login-container {
+      display: flex;
+      height: 100vh;
+      width: 100%;
+    }
+
+    /* Form Section - Left Side */
+    .form-section {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: white;
+      padding: 2rem;
+      min-height: 100vh;
+    }
+
+    .form-content {
+      width: 100%;
+      max-width: 400px;
+      display: flex;
+      flex-direction: column;
+      gap: 2rem;
+    }
+
+    /* Logo */
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      color: #1f2937;
+      font-weight: 600;
+      font-size: 1.125rem;
+    }
+
+    .logo svg {
+      color: #3b82f6;
+    }
+
+    /* Header Text */
+    .header-text {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .journey-text {
+      color: #6b7280;
+      font-size: 0.875rem;
+      font-weight: 400;
+    }
+
+    .main-title {
+      color: #1f2937;
+      font-size: 1.875rem;
+      font-weight: 600;
+      line-height: 1.2;
+    }
+
+    /* Form */
+    .signup-form {
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+
+    .input-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .input-group label {
+      color: #374151;
+      font-size: 0.875rem;
+      font-weight: 500;
+    }
+
+    .input-group input {
+      padding: 0.75rem 1rem;
+      border: 1px solid #d1d5db;
+      border-radius: 0.5rem;
+      font-size: 0.875rem;
+      transition: all 0.2s ease;
+      background: white;
+    }
+
+    .input-group input:focus {
+      outline: none;
+      border-color: #3b82f6;
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    }
+
+    .input-group input::placeholder {
+      color: #9ca3af;
+    }
+
+    .signup-btn {
+      background: #3b82f6;
+      color: white;
+      border: none;
+      padding: 0.875rem 1rem;
+      border-radius: 0.5rem;
+      font-size: 0.875rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      margin-top: 0.5rem;
+    }
+
+    .signup-btn:hover {
+      background: #2563eb;
+      transform: translateY(-1px);
+    }
+
+    /* Social Section */
+    .social-section {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .social-text {
+      color: #6b7280;
+      font-size: 0.875rem;
+      position: relative;
+    }
+
+    .social-text::before,
+    .social-text::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      width: 60px;
+      height: 1px;
+      background: #e5e7eb;
+    }
+
+    .social-text::before {
+      left: -80px;
+    }
+
+    .social-text::after {
+      right: -80px;
+    }
+
+    .social-buttons {
+      display: flex;
+      gap: 1rem;
+    }
+
+    .social-btn {
+      width: 48px;
+      height: 48px;
+      border: 1px solid #e5e7eb;
+      border-radius: 0.5rem;
+      background: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .social-btn:hover {
+      background: #f9fafb;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+
+    .social-btn.apple {
+      color: #1f2937;
+    }
+
+    /* Sign In Link */
+    .signin-link {
+      text-align: center;
+      font-size: 0.875rem;
+      color: #6b7280;
+    }
+
+    .signin-text {
+      color: #3b82f6;
+      text-decoration: none;
+      font-weight: 500;
+    }
+
+    .signin-text:hover {
+      text-decoration: underline;
+    }
+
+    /* Background Section - Right Side */
+    .background-section {
+      flex: 1;
+      position: relative;
+      overflow: hidden;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+
+    .fluid-background {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(135deg, 
+        #3b82f6 0%, 
+        #8b5cf6 25%, 
+        #ec4899 50%, 
+        #f59e0b 75%, 
+        #3b82f6 100%);
+      animation: backgroundShift 20s ease-in-out infinite;
+    }
+
+    @keyframes backgroundShift {
+      0%, 100% { 
+        background: linear-gradient(135deg, 
+          #3b82f6 0%, 
+          #8b5cf6 25%, 
+          #ec4899 50%, 
+          #f59e0b 75%, 
+          #3b82f6 100%);
+      }
+      50% { 
+        background: linear-gradient(135deg, 
+          #ec4899 0%, 
+          #3b82f6 25%, 
+          #8b5cf6 50%, 
+          #f59e0b 75%, 
+          #ec4899 100%);
+      }
+    }
+
+    .fluid-shape {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(40px);
+      opacity: 0.7;
+      animation: float 15s ease-in-out infinite;
+    }
+
+    .shape-1 {
+      width: 300px;
+      height: 300px;
+      background: radial-gradient(circle, rgba(59, 130, 246, 0.8) 0%, rgba(139, 92, 246, 0.4) 100%);
+      top: 10%;
+      left: 20%;
+      animation-delay: 0s;
+    }
+
+    .shape-2 {
+      width: 200px;
+      height: 200px;
+      background: radial-gradient(circle, rgba(236, 72, 153, 0.8) 0%, rgba(59, 130, 246, 0.4) 100%);
+      top: 60%;
+      right: 10%;
+      animation-delay: -5s;
+    }
+
+    .shape-3 {
+      width: 150px;
+      height: 150px;
+      background: radial-gradient(circle, rgba(139, 92, 246, 0.9) 0%, rgba(236, 72, 153, 0.3) 100%);
+      bottom: 20%;
+      left: 10%;
+      animation-delay: -10s;
+    }
+
+    @keyframes float {
+      0%, 100% {
+        transform: translateY(0px) rotate(0deg);
+      }
+      33% {
+        transform: translateY(-30px) rotate(120deg);
+      }
+      66% {
+        transform: translateY(20px) rotate(240deg);
+      }
+    }
+
+    .bubble {
+      position: absolute;
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 50%;
+      animation: bubble 12s linear infinite;
+    }
+
+    .bubble-1 {
+      width: 20px;
+      height: 20px;
+      top: 80%;
+      left: 15%;
+      animation-delay: 0s;
+    }
+
+    .bubble-2 {
+      width: 15px;
+      height: 15px;
+      top: 70%;
+      left: 70%;
+      animation-delay: -2s;
+    }
+
+    .bubble-3 {
+      width: 25px;
+      height: 25px;
+      top: 90%;
+      left: 50%;
+      animation-delay: -4s;
+    }
+
+    .bubble-4 {
+      width: 12px;
+      height: 12px;
+      top: 60%;
+      left: 30%;
+      animation-delay: -6s;
+    }
+
+    .bubble-5 {
+      width: 18px;
+      height: 18px;
+      top: 85%;
+      left: 80%;
+      animation-delay: -8s;
+    }
+
+    @keyframes bubble {
+      0% {
+        transform: translateY(0) scale(1);
+        opacity: 0.7;
+      }
+      50% {
+        opacity: 1;
+      }
+      100% {
+        transform: translateY(-100vh) scale(0.3);
+        opacity: 0;
+      }
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+      .login-container {
+        flex-direction: column;
+      }
+      
+      .form-section {
+        flex: none;
+        min-height: auto;
+        padding: 1.5rem;
+      }
+      
+      .background-section {
+        flex: none;
+        height: 40vh;
+      }
+      
+      .social-text::before,
+      .social-text::after {
+        width: 40px;
+      }
+      
+      .social-text::before {
+        left: -60px;
+      }
+      
+      .social-text::after {
+        right: -60px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="login-container">
+    <!-- Left Side - Form -->
+    <div class="form-section">
+      <div class="form-content">
+        <!-- Logo -->
+        <div class="logo">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+            <path d="M2 17L12 22L22 17" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+            <path d="M2 12L12 17L22 12" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+          </svg>
+          <span>InsideBox</span>
+        </div>
+
+        <!-- Header Text -->
+        <div class="header-text">
+          <p class="journey-text">Start your journey</p>
+          <h1 class="main-title">Sign Up to InsideBox</h1>
+        </div>
+
+        <!-- Form -->
+        <form class="signup-form">
+          <div class="input-group">
+            <label for="email">E-mail</label>
+            <input type="email" id="email" placeholder="example@email.com" />
+          </div>
+
+          <div class="input-group">
+            <label for="password">Password</label>
+            <input type="password" id="password" placeholder="••••••••" />
+          </div>
+
+          <button type="submit" class="signup-btn">Sign Up</button>
+        </form>
+
+        <!-- Social Login -->
+        <div class="social-section">
+          <p class="social-text">or sign up with</p>
+          <div class="social-buttons">
+            <button class="social-btn facebook">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" fill="#1877F2"/>
+              </svg>
+            </button>
+            <button class="social-btn google">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+                <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+                <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
+                <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+              </svg>
+            </button>
+            <button class="social-btn apple">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                <path d="M12.152 6.896c-.948 0-2.415-1.078-3.96-1.04-2.04.027-3.91 1.183-4.961 3.014-2.117 3.675-.546 9.103 1.519 12.09 1.013 1.454 2.208 3.09 3.792 3.039 1.52-.065 2.09-.987 3.935-.987 1.831 0 2.35.987 3.96.948 1.637-.026 2.676-1.48 3.676-2.948 1.156-1.688 1.636-3.325 1.662-3.415-.039-.013-3.182-1.221-3.22-4.857-.026-3.04 2.48-4.494 2.597-4.559-1.429-2.09-3.623-2.324-4.39-2.376-2-.156-3.675 1.09-4.61 1.09zM15.53 3.83c.843-1.012 1.4-2.427 1.245-3.83-1.207.052-2.662.805-3.532 1.818-.78.896-1.454 2.338-1.273 3.714 1.338.104 2.715-.688 3.559-1.701z" fill="currentColor"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- Sign In Link -->
+        <div class="signin-link">
+          <span>Have an account? </span>
+          <a href="#" class="signin-text">Sign in</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right Side - Artistic Background -->
+    <div class="background-section">
+      <div class="fluid-background">
+        <div class="fluid-shape shape-1"></div>
+        <div class="fluid-shape shape-2"></div>
+        <div class="fluid-shape shape-3"></div>
+        <div class="bubble bubble-1"></div>
+        <div class="bubble bubble-2"></div>
+        <div class="bubble bubble-3"></div>
+        <div class="bubble bubble-4"></div>
+        <div class="bubble bubble-5"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // InsideBox Login Functionality
+    document.addEventListener('DOMContentLoaded', () => {
+      const form = document.querySelector('.signup-form');
+      
+      if (form) {
+        form.addEventListener('submit', (e) => {
+          e.preventDefault();
+          console.log('Sign up form submitted');
+          alert('¡Funcionalidad de registro se implementaría aquí!');
+        });
+      }
+
+      // Social button functionality
+      const socialButtons = document.querySelectorAll('.social-btn');
+      for (const button of socialButtons) {
+        button.addEventListener('click', (e) => {
+          e.preventDefault();
+          const provider = button.classList[1]; // facebook, google, or apple
+          console.log(`${provider} login clicked`);
+          alert(`Login con ${provider.charAt(0).toUpperCase() + provider.slice(1)} se implementaría aquí!`);
+        });
+      }
+
+      // Sign in link
+      const signinLink = document.querySelector('.signin-text');
+      if (signinLink) {
+        signinLink.addEventListener('click', (e) => {
+          e.preventDefault();
+          console.log('Sign in link clicked');
+          alert('¡Página de login se mostraría aquí!');
+        });
+      }
+    });
+  </script>
+</body>
+</html>
