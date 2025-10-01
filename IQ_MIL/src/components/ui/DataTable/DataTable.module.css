@@ -99,10 +99,10 @@
 .filterInput,
 .filterSelect {
   width: 100%;
-  padding: 6px 8px;
+  padding: 5px 8px;
   border: 1px solid #ddd;
   border-radius: 6px;
-  font-size: 13px;
+  font-size: 11px;
   background: #fff;
   transition: border-color 0.2s, box-shadow 0.2s;
 }
@@ -112,6 +112,11 @@
   outline: none;
   border-color: #5b9cf3;
   box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.15);
+}
+
+.filterSelect option {
+  font-size: 10px;  /* ← Cambia este valor al tamaño que desees */
+  padding: 4px;
 }
 
 .singleSelect {
@@ -269,7 +274,7 @@
 }
 
 .optionLabel {
-  font-size: 13px;
+  font-size: 11px;
   color: #334155;
 }
 
