@@ -1,36 +1,37 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import styles from './AdminDashboard.module.css';
 import { AdminDashboard as AdminAssignator } from './Admin_Asignator';
 import { DataTable_2 } from '../ui/DataTable/DataTable_2';
-import { adminService } from '../../services/adminService';
+import { adminService, type Caso } from '../../services/adminService';
 import type { ColumnDef } from '@tanstack/react-table';
 
-interface AdminRecord {
-  id: number;
-  radicado: string;
-  ips_nit: string;
-  ips_nombre: string;
-  factura: string;
-  valor_factura: number;
-  ruta_imagen: string;
-  caso: string;
-  fecha_asignacion: string;
-  total_servicios: number;
-  lider: string;
-  usuario_asignacion: string;
-  total_servicios_usuario: number;
-  estado: string;
-  prioridad: string;
-}
+type AdminRecord = Caso & {
+  // Campos derivados / mapeados para UI (estado y prioridad legibles si luego se implementa catálogo)
+};
 
 export const AdminDashboard = () => {
   const [activeSection, setActiveSection] = useState<'assign' | 'data' | null>(null);
   
-  const [tableData, setTableData] = useState<AdminRecord[]>([
-    { id: 1, radicado: 'RAD-001', ips_nit: '123456789', ips_nombre: 'IPS Salud', factura: 'FACT-001', valor_factura: 1000000, ruta_imagen: '/images/factura1.jpg', caso: 'Caso 1', fecha_asignacion: '2024-09-01', total_servicios: 5, lider: 'Juan Pérez', usuario_asignacion: 'Ana Gómez', total_servicios_usuario: 3, estado: 'Asignado', prioridad: 'Alta' },
-    { id: 2, radicado: 'RAD-002', ips_nit: '987654321', ips_nombre: 'IPS Medicina', factura: 'FACT-002', valor_factura: 500000, ruta_imagen: '/images/factura2.jpg', caso: 'Caso 2', fecha_asignacion: '2024-09-05', total_servicios: 3, lider: 'María Rodríguez', usuario_asignacion: 'Carlos López', total_servicios_usuario: 2, estado: 'En Proceso', prioridad: 'Media' },
-    { id: 3, radicado: 'RAD-003', ips_nit: '111111111', ips_nombre: 'IPS Odontología', factura: 'FACT-003', valor_factura: 2000000, ruta_imagen: '/images/factura3.jpg', caso: 'Caso 3', fecha_asignacion: '2024-09-10', total_servicios: 4, lider: 'Luis Hernández', usuario_asignacion: 'Sofía García', total_servicios_usuario: 1, estado: 'Completado', prioridad: 'Baja' },
-  ]);
+  const [tableData, setTableData] = useState<AdminRecord[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [fechaFiltro, setFechaFiltro] = useState<string>('');
+
+  const loadCasos = useCallback(async () => {
+    setIsLoading(true);
+    try {
+  const casos = await adminService.listarCasos(fechaFiltro || undefined);
+      setTableData(casos);
+    } catch (e) {
+      console.error('Error cargando casos:', e);
+      setTableData([]);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [fechaFiltro]);
+
+  useEffect(() => {
+    loadCasos();
+  }, [loadCasos]);
 
   // ← Definición de columnas con las editables marcadas
   const adminColumns = useMemo<ColumnDef<AdminRecord>[]>(
@@ -43,22 +44,29 @@ export const AdminDashboard = () => {
       {
         accessorKey: 'valor_factura',
         header: 'Valor Factura',
-        cell: ({ row }) => `$${(row.getValue('valor_factura') as number).toLocaleString('es-CO')}`,
-        meta: { editable: true }, // ← Columna editable
+        cell: ({ row }) => {
+          const v = row.getValue('valor_factura') as number | null;
+          if (v == null) return '';
+          return `$${v.toLocaleString('es-CO')}`;
+        },
+        meta: { editable: true },
       },
       { accessorKey: 'ruta_imagen', header: 'Ruta Imagen', meta: { filterType: 'text' } },
       { accessorKey: 'caso', header: 'Caso', meta: { filterType: 'text', editable: true } }, // ← Columna editable
       {
         accessorKey: 'fecha_asignacion',
         header: 'Fecha Asignación',
-        cell: ({ row }) => new Date(row.getValue('fecha_asignacion')).toLocaleDateString('es-CO'),
+        cell: ({ row }) => {
+          const v = row.getValue('fecha_asignacion') as string | null;
+          return v ? new Date(v).toLocaleDateString('es-CO') : '';
+        }
       },
       { accessorKey: 'total_servicios', header: 'Total Servicios' },
       { accessorKey: 'lider', header: 'Líder', meta: { filterType: 'text', editable: true } }, // ← Columna editable
       { accessorKey: 'usuario_asignacion', header: 'Usuario Asignación', meta: { filterType: 'text' } },
       { accessorKey: 'total_servicios_usuario', header: 'Total Servicios Usuario' },
-      { accessorKey: 'estado', header: 'Estado', meta: { filterType: 'select', editable: true } }, // ← Columna editable
-      { accessorKey: 'prioridad', header: 'Prioridad', meta: { filterType: 'select', editable: true } }, // ← Columna editable
+      { accessorKey: 'estado_id', header: 'Estado ID', meta: { filterType: 'text', editable: true } },
+      { accessorKey: 'prioridad', header: 'Prioridad', meta: { filterType: 'text', editable: true } },
     ], 
     []
   );
@@ -73,9 +81,9 @@ export const AdminDashboard = () => {
       // Llamar al servicio para cada cambio
       for (const change of changes) {
         await adminService.updateRecord(
-          change.identifier as string, // radicado
-          change.columnId,              // nombre de la columna
-          change.newValue               // nuevo valor
+          change.identifier as string,
+          change.columnId,
+          change.newValue
         );
       }
 
@@ -142,7 +150,13 @@ export const AdminDashboard = () => {
           </div>
         </div>
 
-        <div className={styles.tableContainer}>
+        <div className={styles.tableContainer + ' ' + styles.loadingWrapper}>
+          <div style={{display:'flex',gap:'1rem',padding:'0.75rem 1rem',alignItems:'center'}}>
+            <label style={{fontSize:'0.8rem',fontWeight:600}}>Fecha:</label>
+            <input type="date" value={fechaFiltro} onChange={(e)=>setFechaFiltro(e.target.value)} style={{padding:'0.35rem 0.5rem',border:'1px solid #d1d5db',borderRadius:6}} />
+            <button onClick={loadCasos} style={{padding:'0.4rem 0.9rem',borderRadius:6,border:'1px solid #ed1b22',background:'#ed1b22',color:'#fff',fontSize:'0.75rem',fontWeight:600,cursor:'pointer'}}>Refrescar</button>
+          </div>
+          {isLoading && <div className={styles.loadingOverlay} aria-label="Cargando casos" />}
           <DataTable_2
             data={tableData}
             columns={adminColumns}
