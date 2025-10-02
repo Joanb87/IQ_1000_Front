@@ -2,7 +2,7 @@
 
 .dashboard {
   min-height: 100vh;
-  padding: 2rem;
+  padding: 1rem;
 }
 
 h1 {
@@ -136,6 +136,89 @@ h1 {
   /* padding: 1.5rem; */
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
 }
+
+.tableContainer {
+  max-width: 1900px;
+  margin: 0 auto;
+  background: white;
+  border-radius: 16px;
+  /* padding: 1.5rem; */
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  position: relative;
+}
+
+/* Botones de acción de la tabla */
+.tableActions {
+  position: absolute;
+  top: 1rem;
+  right: 1.5rem;
+  display: flex;
+  gap: 0.75rem;
+  z-index: 10;
+}
+
+.saveButton,
+.cancelButton {
+  padding: 0.625rem 1.25rem;
+  background: transparent;
+  border: 1.5px solid;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.saveButton {
+  border-color: #10b981;
+  color: #10b981;
+}
+
+.saveButton:hover {
+  background: #10b981;
+  color: white;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25);
+  transform: translateY(-1px);
+}
+
+.saveButton:active {
+  transform: translateY(0);
+}
+
+.cancelButton {
+  border-color: #ef4444;
+  color: #ef4444;
+}
+
+.cancelButton:hover {
+  background: #ef4444;
+  color: white;
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.25);
+  transform: translateY(-1px);
+}
+
+.cancelButton:active {
+  transform: translateY(0);
+}
+
+.saveButton:disabled,
+.cancelButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.saveButton:disabled:hover,
+.cancelButton:disabled:hover {
+  background: transparent;
+  box-shadow: none;
+  color: inherit;
+}
+
+
 
 @media (max-width: 768px) {
   .dashboard {
