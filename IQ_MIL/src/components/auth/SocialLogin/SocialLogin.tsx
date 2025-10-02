@@ -1,25 +1,26 @@
 import { GoogleIcon } from '../../icons';
 import styles from './SocialLogin.module.css';
 import { auth, googleProvider } from '../../../config/firebase';
+import { API_URL } from '../../../config/api';
 import { signInWithPopup } from 'firebase/auth';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../../context/AuthContext';
-import type { UserRole } from '../../../types/auth';
+import type { BackendUserInfo } from '../../../types/auth';
 
 export const SocialLogin = () => {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const { setUserRole } = useAuth();
+  const { setUserFromBackend, setUserRole } = useAuth();
   const navigate = useNavigate();
 
   const handleGoogleLogin = async () => {
+    setErrorMessage(null);
     try {
       const result = await signInWithPopup(auth, googleProvider);
       const token = await result.user.getIdToken();
-      
-      // Cuando conectes con el backend, descomentar este código:
+
       try {
-        const response = await fetch('tu-api/auth/verify', {
+        const response = await fetch(`${API_URL}/auth/verify-token`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -34,21 +35,21 @@ export const SocialLogin = () => {
         });
 
         if (!response.ok) {
-          throw new Error('Error en la verificación del usuario');
+          console.warn('Fallo verificación backend. Status:', response.status);
+          // Fallback mínimo (sin backend)
+          setUserRole('usuario');
+        } else {
+          const backendData = await response.json() as BackendUserInfo;
+          setUserFromBackend({ firebaseUser: result.user, backend: backendData, token });
         }
-
-        const { role } = await response.json();
-        setUserRole(role);
-      } catch (error) {
-        // Mientras no haya backend, usamos un rol por defecto
-        console.log('Backend no disponible, usando rol por defecto');
+      } catch (verifyError) {
+        console.warn('Backend no disponible para verificar token:', verifyError);
         setUserRole('usuario');
       }
-
       navigate('/dashboard');
     } catch (error) {
       setErrorMessage('Error al iniciar sesión con Google');
-      console.error('Error:', error);
+      console.error('Error login Google:', error);
     }
   };
 
