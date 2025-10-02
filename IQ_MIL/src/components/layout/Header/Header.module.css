@@ -1,19 +1,59 @@
+/* Import de fuentes modernas */
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700&family=Rajdhani:wght@400;500;600&display=swap');
+
+:root {
+  --header-h: 70px;
+  --page-pad-x: 2rem; /* alinea con el padding derecho del header */
+}
+
+/* ===== Header ===== */
 .header {
+  position: relative;
+  z-index: 1000;
+  height: var(--header-h);
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 0.75rem 2rem;
-  background: #283760;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
-  height: 70px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-  position: relative;
-  z-index: 1000;
+  padding: 0.75rem var(--page-pad-x);
+  background: linear-gradient(135deg, #1e293b 0%, #0f172a 50%, #1e293b 100%);
+  border-bottom: 2px solid rgba(44, 91, 255, 0.3);
+  box-shadow: 0 4px 30px rgba(44, 91, 255, 0.2);
+
+  /* Importante: permitir que el menú/overlay salga sin ser recortado */
+  overflow: visible;
+}
+
+/* Capa de brillo contenida y no bloquea clics */
+.headerFx {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.headerFx::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  /* Clip para mantener la animación dentro del header */
+  clip-path: inset(0);
+  background: linear-gradient(
+    90deg,
+    transparent 35%,
+    rgba(44, 91, 255, 0.12) 50%,
+    transparent 65%
+  );
+  background-size: 200% 100%;
+  animation: headerShineX 8s linear infinite;
+}
+@keyframes headerShineX {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
 }
 
 .leftSection {
   display: flex;
   align-items: center;
+  position: relative;
+  z-index: 1;
 }
 
 .logoContainer {
@@ -25,13 +65,36 @@
 .nepsLogo {
   height: 32px;
   width: auto;
-  filter: brightness(0) invert(1);
+  filter: brightness(0) invert(1) drop-shadow(0 0 8px rgba(44, 91, 255, 0.5));
+  transition: filter 0.3s ease;
+}
+.nepsLogo:hover {
+  filter: brightness(0) invert(1) drop-shadow(0 0 15px rgba(44, 91, 255, 0.8));
 }
 
 .divider {
-  width: 1px;
-  height: 30px;
-  background: linear-gradient(to bottom, transparent, rgba(255, 255, 255, 0.3), transparent);
+  width: 2px;
+  height: 35px;
+  background: linear-gradient(
+    to bottom,
+    transparent,
+    rgba(44, 91, 255, 0.6),
+    rgba(255, 107, 107, 0.6),
+    rgba(44, 91, 255, 0.6),
+    transparent
+  );
+  box-shadow: 0 0 10px rgba(44, 91, 255, 0.4);
+  animation: dividerPulse 3s ease-in-out infinite;
+}
+@keyframes dividerPulse {
+  0%, 100% {
+    opacity: 0.6;
+    box-shadow: 0 0 10px rgba(44, 91, 255, 0.4);
+  }
+  50% {
+    opacity: 1;
+    box-shadow: 0 0 20px rgba(44, 91, 255, 0.8);
+  }
 }
 
 .caseFlowLogo {
@@ -39,32 +102,50 @@
   align-items: center;
   font-family: 'Orbitron', 'Arial', sans-serif;
   font-weight: 700;
-  font-size: 1.1rem;
-  letter-spacing: 0.5px;
+  font-size: 1.2rem;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: transform 0.3s ease;
+}
+.caseFlowLogo:hover {
+  transform: scale(1.05);
 }
 
 .caseText {
-  background: linear-gradient(90deg, #ffffff 0%, #a0aec0 100%);
+  background: linear-gradient(90deg, #ffffff 0%, #e0e7ff 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
+  filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.3));
 }
 
 .flowText {
-  background: linear-gradient(90deg, #63b3ed 0%, #4299e1 100%);
+  background: linear-gradient(90deg, #2c5bff 0%, #60a5fa 50%, #2c5bff 100%);
+  background-size: 200% auto;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
+  animation: flowGradient 3s ease-in-out infinite;
+  filter: drop-shadow(0 0 12px rgba(44, 91, 255, 0.6));
+}
+@keyframes flowGradient {
+  0%, 100% { background-position: 0% center; }
+  50%      { background-position: 100% center; }
 }
 
 .navigation {
   display: flex;
   gap: 1.5rem;
   align-items: center;
+  position: relative;
+  z-index: 1;
 }
 
+/* ===== Perfil / Botón ===== */
 .profileSection {
   position: relative;
+  z-index: 1;
 }
 
 .profileButton {
@@ -72,30 +153,40 @@
   border: none;
   cursor: pointer;
   padding: 0;
-  transition: transform 0.2s ease;
+  transition: transform 0.3s ease;
 }
-
 .profileButton:hover {
-  transform: translateY(-1px);
+  transform: translateY(-2px);
 }
 
 .profileContainer {
   display: flex;
   align-items: center;
-  background: rgba(255, 255, 255, 0.95);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 12px;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(240, 249, 255, 0.95) 100%);
+  border: 1px solid rgba(44, 91, 255, 0.2);
+  border-radius: 16px;
   padding: 0.5rem 0.75rem;
   gap: 0.75rem;
-  box-shadow: 0 2px 15px rgba(0, 0, 0, 0.1);
+  box-shadow:
+    0 4px 20px rgba(44, 91, 255, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.5);
   backdrop-filter: blur(10px);
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
 }
-
-.profileContainer:hover {
-  box-shadow: 0 4px 25px rgba(0, 0, 0, 0.15);
-  background: rgba(255, 255, 255, 1);
-  transform: translateY(-1px);
+.profileContainer::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(44, 91, 255, 0.1), transparent);
+  transition: left 0.5s ease;
+}
+.profileContainer:hover::before {
+  left: 100%;
 }
 
 .companyLogo {
@@ -104,35 +195,41 @@
   justify-content: center;
   padding: 0.25rem;
 }
-
 .companyIcon {
   width: 60px;
   height: 24px;
   object-fit: contain;
-  filter: brightness(0.8);
+  filter: brightness(0.8) drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
+  transition: filter 0.3s ease;
+}
+.profileContainer:hover .companyIcon {
+  filter: brightness(1) drop-shadow(0 4px 8px rgba(44, 91, 255, 0.3));
 }
 
 .userInfo {
   display: flex;
   flex-direction: column;
   align-items: flex-end;
-  gap: 0.1rem;
+  gap: 0.15rem;
 }
-
 .userName {
   font-size: 0.85rem;
   font-weight: 600;
-  color: #2d3748;
+  background: linear-gradient(90deg, #1e293b 0%, #334155 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
   white-space: nowrap;
 }
-
 .userRole {
   font-size: 0.75rem;
-  color: #718096;
-  background: #f7fafc;
-  padding: 0.2rem 0.5rem;
-  border-radius: 8px;
-  font-weight: 500;
+  color: #2c5bff;
+  background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+  padding: 0.25rem 0.6rem;
+  border-radius: 10px;
+  font-weight: 600;
+  border: 1px solid rgba(44, 91, 255, 0.2);
+  box-shadow: 0 2px 4px rgba(44, 91, 255, 0.1);
 }
 
 .profileImage {
@@ -140,42 +237,56 @@
   height: 36px;
   border-radius: 50%;
   object-fit: cover;
-  border: 2px solid #e2e8f0;
-  transition: border-color 0.3s ease;
+  border: 2px solid rgba(44, 91, 255, 0.3);
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(44, 91, 255, 0.2);
 }
-
 .profileContainer:hover .profileImage {
-  border-color: #4299e1;
+  border-color: #2c5bff;
+  box-shadow: 0 4px 15px rgba(44, 91, 255, 0.4);
+  transform: scale(1.05);
 }
 
 .profilePlaceholder {
   width: 36px;
   height: 36px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #4299e1 0%, #3182ce 100%);
+  background: linear-gradient(135deg, #2c5bff 0%, #60a5fa 100%);
   color: white;
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 0.9rem;
-  font-weight: 600;
-  border: 2px solid #e2e8f0;
+  font-weight: 700;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  box-shadow:
+    0 4px 12px rgba(44, 91, 255, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  transition: all 0.3s ease;
+}
+.profileContainer:hover .profilePlaceholder {
+  box-shadow:
+    0 6px 20px rgba(44, 91, 255, 0.5),
+    inset 0 1px 0 rgba(255, 255, 255, 0.5);
+  transform: scale(1.05);
 }
 
+/* ===== Menú de perfil: FIXED para no ser recortado ===== */
 .profileMenu {
-  position: absolute;
-  top: 100%;
-  right: 0;
-  margin-top: 0.75rem;
-  background: white;
-  border-radius: 16px;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
-  padding: 1.25rem;
-  min-width: 280px;
-  animation: slideIn 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-  z-index: 1000;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  backdrop-filter: blur(10px);
+  position: fixed;
+  top: calc(var(--header-h) + 8px);
+  right: var(--page-pad-x);
+  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+  border-radius: 20px;
+  box-shadow:
+    0 20px 60px rgba(44, 91, 255, 0.2),
+    0 0 0 1px rgba(44, 91, 255, 0.1);
+  padding: 1.5rem;
+  min-width: 300px;
+  animation: slideIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(44, 91, 255, 0.1);
+  z-index: 3000; /* por encima del header y efectos */
 }
 
 .profileInfo {
@@ -192,73 +303,105 @@
 }
 
 .avatarImage {
-  width: 48px;
-  height: 48px;
+  width: 54px;
+  height: 54px;
   border-radius: 50%;
   object-fit: cover;
-  border: 3px solid #e2e8f0;
+  border: 3px solid rgba(44, 91, 255, 0.2);
+  box-shadow: 0 4px 12px rgba(44, 91, 255, 0.2);
 }
-
 .avatarPlaceholder {
-  width: 48px;
-  height: 48px;
+  width: 54px;
+  height: 54px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #4299e1 0%, #3182ce 100%);
+  background: linear-gradient(135deg, #2c5bff 0%, #60a5fa 100%);
   color: white;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.1rem;
-  font-weight: 600;
-  border: 3px solid #e2e8f0;
+  font-size: 1.3rem;
+  font-weight: 700;
+  border: 3px solid rgba(255, 255, 255, 0.3);
+  box-shadow:
+    0 6px 20px rgba(44, 91, 255, 0.3),
+    inset 0 2px 0 rgba(255, 255, 255, 0.3);
 }
 
 .userDetails {
   display: flex;
   flex-direction: column;
-  gap: 0.25rem;
+  gap: 0.3rem;
   flex: 1;
 }
-
 .userDetails strong {
-  color: #2d3748;
-  font-size: 1rem;
+  background: linear-gradient(90deg, #1e293b 0%, #334155 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  font-size: 1.05rem;
+  font-weight: 700;
 }
-
 .userDetails span {
-  color: #718096;
+  color: #64748b;
   font-size: 0.85rem;
 }
 
 .roleBadge {
   display: inline-block;
-  padding: 0.3rem 0.8rem;
-  background: linear-gradient(135deg, #edf2f7 0%, #e2e8f0 100%);
+  padding: 0.4rem 1rem;
+  background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
   border-radius: 12px;
   font-size: 0.75rem;
-  font-weight: 600;
-  color: #4a5568;
+  font-weight: 700;
+  color: #2c5bff;
   margin-top: 0.25rem;
-  border: 1px solid #e2e8f0;
+  border: 1px solid rgba(44, 91, 255, 0.2);
+  box-shadow: 0 2px 8px rgba(44, 91, 255, 0.1);
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
 }
 
 .menuDivider {
-  height: 1px;
-  background: linear-gradient(to right, transparent, #e2e8f0, transparent);
-  margin: 1rem 0;
+  height: 2px;
+  background: linear-gradient(
+    to right,
+    transparent,
+    rgba(44, 91, 255, 0.2),
+    transparent
+  );
+  margin: 1.2rem 0;
+  position: relative;
+}
+.menuDivider::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 40%;
+  height: 100%;
+  background: linear-gradient(
+    to right,
+    transparent,
+    rgba(44, 91, 255, 0.4),
+    transparent
+  );
+  filter: blur(2px);
 }
 
 .roleSwitcher {
   margin: 0.5rem 0;
 }
-
 .roleTitle {
-  font-size: 0.8rem;
-  font-weight: 600;
-  color: #718096;
+  font-size: 0.75rem;
+  font-weight: 700;
+  background: linear-gradient(90deg, #64748b 0%, #475569 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
   margin-bottom: 0.75rem;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 1px;
 }
 
 .roleButtons {
@@ -266,7 +409,6 @@
   flex-direction: column;
   gap: 0.5rem;
 }
-
 .roleButton {
   display: flex;
   align-items: center;
@@ -276,35 +418,72 @@
   padding: 0.75rem 1rem;
   text-align: left;
   cursor: pointer;
-  border-radius: 10px;
+  border-radius: 12px;
   transition: all 0.3s ease;
   font-size: 0.9rem;
-  color: #4a5568;
+  color: #475569;
   width: 100%;
+  position: relative;
+  overflow: hidden;
 }
-
+.roleButton::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(44, 91, 255, 0.05), transparent);
+  transition: left 0.4s ease;
+}
+.roleButton:hover::before {
+  left: 100%;
+}
 .roleButton:hover {
-  background: #f7fafc;
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
   transform: translateX(5px);
+  border: 1px solid rgba(44, 91, 255, 0.1);
 }
 
 .activeRole {
-  background: #ebf8ff;
-  color: #2b6cb0;
-  font-weight: 600;
-  border: 1px solid #bee3f8;
+  background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+  color: #2c5bff;
+  font-weight: 700;
+  border: 1px solid rgba(44, 91, 255, 0.3);
+  box-shadow: 0 4px 12px rgba(44, 91, 255, 0.15);
 }
-
+.activeRole:hover {
+  transform: translateX(5px);
+  box-shadow: 0 6px 16px rgba(44, 91, 255, 0.2);
+}
 .roleDot {
   width: 8px;
   height: 8px;
   border-radius: 50%;
   background: #cbd5e0;
-  transition: background 0.3s ease;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
-
 .activeRole .roleDot {
-  background: #4299e1;
+  background: linear-gradient(135deg, #2c5bff 0%, #60a5fa 100%);
+  box-shadow:
+    0 0 12px rgba(44, 91, 255, 0.6),
+    0 2px 8px rgba(44, 91, 255, 0.3);
+  animation: dotPulse 2s ease-in-out infinite;
+}
+@keyframes dotPulse {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow:
+      0 0 12px rgba(44, 91, 255, 0.6),
+      0 2px 8px rgba(44, 91, 255, 0.3);
+  }
+  50% {
+    transform: scale(1.2);
+    box-shadow:
+      0 0 20px rgba(44, 91, 255, 0.8),
+      0 4px 12px rgba(44, 91, 255, 0.5);
+  }
 }
 
 .signOutButton {
@@ -315,27 +494,43 @@
   padding: 0.75rem 1rem;
   background: none;
   border: none;
-  color: #e53e3e;
+  color: #ef4444;
   cursor: pointer;
   font-size: 0.9rem;
-  font-weight: 500;
+  font-weight: 600;
   transition: all 0.3s ease;
-  border-radius: 10px;
+  border-radius: 12px;
+  position: relative;
+  overflow: hidden;
 }
-
+.signOutButton::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(239, 68, 68, 0.05), transparent);
+  transition: left 0.4s ease;
+}
+.signOutButton:hover::before {
+  left: 100%;
+}
 .signOutButton:hover {
-  background: #fed7d7;
+  background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
   transform: translateX(5px);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.15);
 }
-
 .signOutIcon {
   font-size: 1rem;
 }
 
+/* Animación de entrada del menú */
 @keyframes slideIn {
   from {
     opacity: 0;
-    transform: translateY(-15px) scale(0.95);
+    transform: translateY(-12px) scale(0.98);
   }
   to {
     opacity: 1;
@@ -343,18 +538,23 @@
   }
 }
 
-/* Responsive */
+/* ===== Responsive ===== */
 @media (max-width: 768px) {
   .header {
     padding: 0.75rem 1rem;
   }
-  
+
   .userName {
     display: none;
   }
-  
+
   .profileMenu {
-    min-width: 250px;
-    right: -10px;
+    min-width: 260px;
+    right: 10px; /* un poco menos de margen en móviles */
+  }
+
+  .caseFlowLogo {
+    font-size: 1rem;
+    letter-spacing: 1px;
   }
 }

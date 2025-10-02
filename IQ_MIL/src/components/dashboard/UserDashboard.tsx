@@ -126,12 +126,12 @@ export const UserDashboard = () => {
 
   const teamColumns = useMemo<ColumnDef<TeamMember>[]>(() => [
     { accessorKey: 'radicado', header: 'Radicado', meta: { filterType: 'text' }, enableSorting: true },
-    { accessorKey: 'nombre', header: 'Usuario', meta: { filterType: 'text' }, cell: ({ row }) => <div className={styles.nameCell}><strong>{row.getValue('nombre') as string}</strong></div> },
+    // { accessorKey: 'nombre', header: 'Usuario', meta: { filterType: 'none' }, cell: ({ row }) => <div className={styles.nameCell}><strong>{row.getValue('nombre') as string}</strong></div> },
     { accessorKey: 'estado', header: 'Estado', meta: { filterType: 'select', options: estadosOptions }, cell: ({ row }) => { const estado = row.getValue('estado') as string | undefined; if (!estado) return <span className={styles.statusBadge}>-</span>; const estadoClass = estado.toLowerCase().replace(/\s+/g, ''); return <span className={`${styles.statusBadge} ${styles[estadoClass] || ''}`}>{estado}</span>; } },
-    { accessorKey: 'fecha_inicio', header: 'Fecha Inicio', meta: { filterType: 'text' }, cell: ({ row }) => { const v = row.getValue('fecha_inicio') as string; return v ? v.split('T')[0] : '-'; } },
-    { accessorKey: 'fecha_fin', header: 'Fecha Fin', meta: { filterType: 'text' }, cell: ({ row }) => { const v = row.getValue('fecha_fin') as string | null; return v ? v.split('T')[0] : '-'; } },
-    { accessorKey: 'total_minutos', header: 'Total Minutos', meta: { filterType: 'text' }, cell: ({ row }) => { const val = row.getValue('total_minutos') as number | null; return val == null ? '' : `${val} min`; } },
-    { accessorKey: 'total_servicios', header: 'Total Servicios', meta: { filterType: 'text' }, cell: ({ row }) => { const v = row.original.total_servicios; return v == null ? '' : v; } },
+    { accessorKey: 'fecha_inicio', header: 'Fecha Inicio', meta: { filterType: 'none' }, cell: ({ row }) => { const v = row.getValue('fecha_inicio') as string; return v ? v.split('T')[0] : '-'; } },
+    { accessorKey: 'fecha_fin', header: 'Fecha Fin', meta: { filterType: 'none' }, cell: ({ row }) => { const v = row.getValue('fecha_fin') as string | null; return v ? v.split('T')[0] : '-'; } },
+    { accessorKey: 'total_minutos', header: 'Total Minutos', meta: { filterType: 'none' }, cell: ({ row }) => { const val = row.getValue('total_minutos') as number | null; return val == null ? '' : `${val} min`; } },
+    { accessorKey: 'total_servicios', header: 'Total Servicios', meta: { filterType: 'none' }, cell: ({ row }) => { const v = row.original.total_servicios; return v == null ? '' : v; } },
   ], [estadosOptions]);
 
   return (
