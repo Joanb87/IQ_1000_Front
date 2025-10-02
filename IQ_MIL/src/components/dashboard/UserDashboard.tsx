@@ -191,11 +191,18 @@ return (
             {isLoading ? 'Tomando...' : '+ Tomar Caso'}
           </button>
         </div>
-        <div className={styles.tableContainer}>
-          {isFetching ? (
-            <div className={styles.loading}>Cargando casos...</div>
-          ) : (
-            <DataTable_2 data={filteredData} columns={teamColumns} pageSize={8} className={styles.customTable} onRowClick={handleRowClick} />
+        <div className={styles.tableContainer} aria-busy={isFetching}>
+          <DataTable_2 
+            data={filteredData} 
+            columns={teamColumns} 
+            pageSize={8} 
+            className={styles.customTable} 
+            onRowClick={handleRowClick} 
+          />
+          {isFetching && (
+            <div className={styles.loadingOverlay} role="status" aria-label="Cargando casos">
+              <div className={styles.spinner}></div>
+            </div>
           )}
         </div>
       </section>

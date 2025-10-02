@@ -167,6 +167,8 @@ h1 {
   background: white;
   border-radius: 16px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  position: relative;
+  overflow: hidden;
 }
 
 .nameCell {
@@ -200,6 +202,38 @@ h1 {
 .nocompletado {
   background: #e0e7ff;
   color: #3730a3;
+}
+
+/* Overlay de carga para evitar parpadeo */
+.loadingOverlay {
+  position: absolute;
+  inset: 0;
+  backdrop-filter: blur(2px);
+  background: rgba(255,255,255,0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: fadeIn 160ms ease forwards;
+  z-index: 10;
+}
+
+.spinner {
+  width: 46px;
+  height: 46px;
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid #ed1b22;
+  border-radius: 50%;
+  animation: spin 0.9s linear infinite;
+  box-shadow: 0 0 0 1px rgba(0,0,0,0.04);
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
 /* Modal Styles */
