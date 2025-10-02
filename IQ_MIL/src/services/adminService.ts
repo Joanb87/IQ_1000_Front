@@ -136,6 +136,25 @@ export const adminService = {
     return { aborted: !!signal?.aborted, totalLoaded: loaded, totalExpected: total, data: all };
   },
 
+  // Subida de archivo Excel (trunca e ingesta en backend)
+  async uploadExcel(file: File) : Promise<any> {
+    const token = await (await import('../config/firebase')).auth.currentUser?.getIdToken();
+    const form = new FormData();
+    form.append('file', file);
+    const url = `${api.baseURL}/upload-file/excel`;
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${token}` }, // No definir Content-Type manualmente
+      body: form
+    });
+    if (!res.ok) {
+      let detail: any = null;
+      try { detail = await res.json(); } catch { /* ignore */ }
+      throw new Error(detail?.message || `Error ${res.status}`);
+    }
+    try { return await res.json(); } catch { return null; }
+  },
+
   // Actualiza un campo de un caso por radicado (usa caché + fallback)
   async updateRecord(radicado: string, columnId: string, newValue: any) {
     // TODO: Optimizar cuando exista endpoint directo por radicado.

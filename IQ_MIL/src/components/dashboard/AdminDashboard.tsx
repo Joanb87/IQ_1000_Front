@@ -18,6 +18,9 @@ export const AdminDashboard = () => {
   // Eliminado HUD de progreso: ya no se guarda estado de progreso para UI
   const [pageIndex, setPageIndex] = useState(0);
   const abortRef = useRef<AbortController | null>(null);
+  const [fileToUpload, setFileToUpload] = useState<File | null>(null);
+  const [uploadStatus, setUploadStatus] = useState<'idle' | 'uploading' | 'success' | 'error'>( 'idle');
+  const [uploadMessage, setUploadMessage] = useState<string>('');
 
   const startProgressiveLoad = useCallback(() => {
     if (!fechaFiltro) return;
@@ -50,6 +53,29 @@ export const AdminDashboard = () => {
     startProgressiveLoad();
     return () => abortRef.current?.abort();
   }, [startProgressiveLoad]);
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const f = e.target.files?.[0] || null;
+    setFileToUpload(f);
+    setUploadStatus('idle');
+    setUploadMessage(f ? f.name : '');
+  };
+
+  const handleUpload = async () => {
+    if (!fileToUpload) return;
+    setUploadStatus('uploading');
+    setUploadMessage('Subiendo...');
+    try {
+      await adminService.uploadExcel(fileToUpload);
+      setUploadStatus('success');
+      setUploadMessage('Archivo procesado correctamente');
+      // Refrescar datos después de una pequeña pausa para que backend termine ingesta
+      setTimeout(() => startProgressiveLoad(), 600);
+    } catch (e: any) {
+      setUploadStatus('error');
+      setUploadMessage(e?.message || 'Error al subir');
+    }
+  };
 
   // ← Definición de columnas con las editables marcadas
   const adminColumns = useMemo<ColumnDef<AdminRecord>[]>(
@@ -161,10 +187,54 @@ export const AdminDashboard = () => {
               accept=".xlsx,.xls"
               className={styles.fileInput}
               id="excelFile"
+              onChange={handleFileSelect}
             />
             <label htmlFor="excelFile" className={styles.fileLabel}>
               Seleccionar archivo
             </label>
+            {fileToUpload && (
+              <div style={{marginTop:'0.75rem', fontSize:'0.7rem', color:'#374151'}}>Seleccionado: {fileToUpload.name}</div>
+            )}
+            <div style={{marginTop:'0.75rem', display:'flex', gap:'0.5rem', flexWrap:'wrap'}}>
+              <button
+                type="button"
+                onClick={handleUpload}
+                disabled={!fileToUpload || uploadStatus==='uploading'}
+                style={{
+                  padding:'0.55rem 1.2rem',
+                  background: uploadStatus==='success' ? '#10b981' : '#ed1b22',
+                  border:'none',
+                  color:'#fff',
+                  borderRadius:8,
+                  fontSize:'0.75rem',
+                  fontWeight:600,
+                  cursor: !fileToUpload || uploadStatus==='uploading' ? 'not-allowed' : 'pointer',
+                  opacity: !fileToUpload || uploadStatus==='uploading' ? 0.65 : 1,
+                  transition:'background .25s'
+                }}
+              >
+                {uploadStatus==='uploading' ? 'Subiendo...' : uploadStatus==='success' ? 'Subido' : 'Subir'}
+              </button>
+              {uploadStatus==='error' && (
+                <button
+                  type="button"
+                  onClick={handleUpload}
+                  style={{padding:'0.5rem 0.9rem',background:'#f59e0b',border:'none',color:'#fff',borderRadius:8,fontSize:'0.7rem',fontWeight:600,cursor:'pointer'}}
+                >Reintentar</button>
+              )}
+              {fileToUpload && uploadStatus!=='uploading' && (
+                <button
+                  type="button"
+                  onClick={()=>{ setFileToUpload(null); setUploadStatus('idle'); setUploadMessage(''); const input = document.getElementById('excelFile') as HTMLInputElement| null; if (input) input.value=''; }}
+                  style={{padding:'0.5rem 0.9rem',background:'#6b7280',border:'none',color:'#fff',borderRadius:8,fontSize:'0.7rem',fontWeight:600,cursor:'pointer'}}
+                >Limpiar</button>
+              )}
+            </div>
+            {uploadStatus !== 'idle' && (
+              <div style={{marginTop:'0.5rem', fontSize:'0.65rem', fontWeight:500, color: uploadStatus==='error' ? '#dc2626' : uploadStatus==='success' ? '#059669' : '#374151'}}>
+                {uploadMessage}
+              </div>
+            )}
           </div>
         </div>
 
