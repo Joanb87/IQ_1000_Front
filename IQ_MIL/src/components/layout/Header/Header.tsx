@@ -13,7 +13,6 @@ export const Header = () => {
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const { user, setUserRole } = useAuth();
 
-  // Función temporal para cambiar roles durante el desarrollo
   const handleRoleChange = (newRole: 'admin' | 'lider' | 'usuario') => {
     setUserRole(newRole);
     setIsProfileOpen(false);
@@ -22,7 +21,6 @@ export const Header = () => {
   const handleSignOut = async () => {
     try {
       await auth.signOut();
-      // La redirección se manejará por el AuthProvider
     } catch (error) {
       console.error('Error al cerrar sesión:', error);
     }
@@ -30,16 +28,23 @@ export const Header = () => {
 
   return (
     <header className={styles.header}>
-      <div className={styles.logoSection}>
-        <img 
-          src="/src/assets/neps_blanco.png" 
-          alt="NEPS Logo" 
-          className={styles.logo2}
-        />
+      <div className={styles.leftSection}>
+        <div className={styles.logoContainer}>
+          <img 
+            src="/src/assets/neps_blanco.png" 
+            alt="NEPS Logo" 
+            className={styles.nepsLogo}
+          />
+          <div className={styles.divider}></div>
+          <div className={styles.caseFlowLogo}>
+            <span className={styles.caseText}>Case</span>
+            <span className={styles.flowText}>Flow</span>
+          </div>
+        </div>
       </div>
       
       <nav className={styles.navigation}>
-        {/* Aquí puedes agregar tus iconos de navegación */}
+        {/* Espacio para futuros iconos de navegación */}
       </nav>
 
       <div className={styles.profileSection}>
@@ -48,7 +53,6 @@ export const Header = () => {
           onClick={() => setIsProfileOpen(!isProfileOpen)}
         >
           <div className={styles.profileContainer}>
-            {/* Logo IQ a la izquierda */}
             <div className={styles.companyLogo}>
               <img 
                 src="/src/assets/iq_logo.png" 
@@ -57,7 +61,10 @@ export const Header = () => {
               />
             </div>
             
-            {/* Imagen del usuario a la derecha */}
+            <div className={styles.userInfo}>
+
+            </div>
+
             {user?.photoURL ? (
               <img 
                 src={user.photoURL} 
@@ -75,39 +82,64 @@ export const Header = () => {
         {isProfileOpen && (
           <div className={styles.profileMenu}>
             <div className={styles.profileInfo}>
-              <strong>{user?.displayName}</strong>
-              <span>{user?.email}</span>
-              <span className={styles.roleLabel}>
-                {user?.role && roleLabels[user.role]}
-              </span>
+              <div className={styles.userAvatar}>
+                {user?.photoURL ? (
+                  <img 
+                    src={user.photoURL} 
+                    alt="Perfil"
+                    className={styles.avatarImage}
+                  />
+                ) : (
+                  <div className={styles.avatarPlaceholder}>
+                    {user?.displayName?.charAt(0) || 'U'}
+                  </div>
+                )}
+              </div>
+              <div className={styles.userDetails}>
+                <strong>{user?.displayName}</strong>
+                <span>{user?.email}</span>
+                <span className={styles.roleBadge}>
+                  {user?.role && roleLabels[user.role]}
+                </span>
+              </div>
             </div>
+            
             <div className={styles.menuDivider} />
-            {/* Selector temporal de roles (solo para desarrollo) */}
+            
             <div className={styles.roleSwitcher}>
-              <button 
-                className={`${styles.roleButton} ${user?.role === 'admin' ? styles.activeRole : ''}`}
-                onClick={() => handleRoleChange('admin')}
-              >
-                Modo Admin
-              </button>
-              <button 
-                className={`${styles.roleButton} ${user?.role === 'lider' ? styles.activeRole : ''}`}
-                onClick={() => handleRoleChange('lider')}
-              >
-                Modo Líder
-              </button>
-              <button 
-                className={`${styles.roleButton} ${user?.role === 'usuario' ? styles.activeRole : ''}`}
-                onClick={() => handleRoleChange('usuario')}
-              >
-                Modo Usuario
-              </button>
+              <h4 className={styles.roleTitle}>Cambiar Rol</h4>
+              <div className={styles.roleButtons}>
+                <button 
+                  className={`${styles.roleButton} ${user?.role === 'admin' ? styles.activeRole : ''}`}
+                  onClick={() => handleRoleChange('admin')}
+                >
+                  <span className={styles.roleDot}></span>
+                  Administrador
+                </button>
+                <button 
+                  className={`${styles.roleButton} ${user?.role === 'lider' ? styles.activeRole : ''}`}
+                  onClick={() => handleRoleChange('lider')}
+                >
+                  <span className={styles.roleDot}></span>
+                  Líder
+                </button>
+                <button 
+                  className={`${styles.roleButton} ${user?.role === 'usuario' ? styles.activeRole : ''}`}
+                  onClick={() => handleRoleChange('usuario')}
+                >
+                  <span className={styles.roleDot}></span>
+                  Usuario
+                </button>
+              </div>
             </div>
+            
             <div className={styles.menuDivider} />
+            
             <button 
               className={styles.signOutButton}
               onClick={handleSignOut}
             >
+              {/* <span className={styles.signOutIcon}>🚪</span> */}
               Cerrar sesión
             </button>
           </div>
