@@ -10,11 +10,14 @@ import type { BackendUserInfo } from '../../../types/auth';
 
 export const SocialLogin = () => {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
   const { setUserFromBackend, setUserRole } = useAuth();
   const navigate = useNavigate();
 
   const handleGoogleLogin = async () => {
     setErrorMessage(null);
+    setIsLoading(true);
+    
     try {
       const result = await signInWithPopup(auth, googleProvider);
       const token = await result.user.getIdToken();
@@ -36,7 +39,6 @@ export const SocialLogin = () => {
 
         if (!response.ok) {
           console.warn('Fallo verificación backend. Status:', response.status);
-          // Fallback mínimo (sin backend)
           setUserRole('usuario');
         } else {
           const backendData = await response.json() as BackendUserInfo;
@@ -50,23 +52,30 @@ export const SocialLogin = () => {
     } catch (error) {
       setErrorMessage('Error al iniciar sesión con Google');
       console.error('Error login Google:', error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
   return (
     <div className={styles.socialSection}>
-      <p className={styles.socialText}>Inicia con</p>
       {errorMessage && (
         <p className={styles.errorMessage}>{errorMessage}</p>
       )}
       <div className={styles.socialButtons}>
         <button 
-          className={styles.socialBtn} 
+          className={`${styles.socialBtn} ${isLoading ? styles.loading : ''}`} 
           onClick={handleGoogleLogin}
           aria-label="Iniciar Sesión con Google"
+          disabled={isLoading}
         >
-          <GoogleIcon />
-          <span>Iniciar Sesión con Google</span>
+          <div className={styles.iconContainer}>
+            <GoogleIcon />
+          </div>
+          <span className={styles.btnText}>
+            {isLoading ? 'Iniciando sesión...' : 'Continuar con Google'}
+          </span>
+          {isLoading && <div className={styles.spinner}></div>}
         </button>
       </div>
     </div>

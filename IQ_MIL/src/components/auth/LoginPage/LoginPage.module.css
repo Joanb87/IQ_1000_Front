@@ -1,3 +1,5 @@
+/* Import de fuentes al inicio */
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600&family=Rajdhani:wght@400;500;600&family=Exo+2:wght@400;500;600&display=swap');
 
 .loginContainer {
   display: flex;
@@ -43,49 +45,72 @@
   text-align: center;
 }
 
-
-
-@keyframes slideInTitle {
-  0% {
-    transform: translateX(-100%);
-    opacity: 0;
-  }
-  100% {
-    transform: translateX(0);
+/* Efecto de entrada letra por letra */
+@keyframes blinkCursor {
+  0%, 100% {
     opacity: 1;
   }
-}
-
-@keyframes lightSweep {
-  0% {
-    background-position: 200% center;
-  }
-  100% {
-    background-position: -200% center;
+  50% {
+    opacity: 0;
   }
 }
 
 .journeyText {
-  font-size: 2rem;
-  font-weight: 500;
-  animation: slideInTitle 1.8s ease-out forwards;
+  font-size: 2.8rem;
+  font-weight: 600;
+  font-family: 'Orbitron', sans-serif; /* Tipografía Orbitron */
   background: linear-gradient(
     90deg,
     #282d3a 0%,
-    #2c5bff 50%,
-    #040508 100%
+    #2c5bff 25%,
+    #ff6b6b 50%,
+    #2c5bff 75%,
+    #282d3a 100%
   );
   background-size: 200% auto;
   color: transparent;
   -webkit-background-clip: text;
   background-clip: text;
   position: relative;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  min-height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .journeyText.animate {
-  animation: slideInTitle 1.8s ease-out forwards, lightSweep 2s ease-in-out 1s;
+  animation: lightSweep 4s ease-in-out infinite; /* 4 segundos (lento) */
 }
 
+.cursor {
+  animation: blinkCursor 1s infinite; /* 1 segundo (lento) */
+  color: #2c5bff;
+  font-weight: 300;
+  margin-left: 2px;
+}
+
+/* Efecto de brillo más lento */
+@keyframes lightSweep {
+  0% {
+    background-position: 200% center;
+    filter: drop-shadow(0 0 5px rgba(44, 91, 255, 0.3));
+  }
+  50% {
+    filter: drop-shadow(0 0 20px rgba(44, 91, 255, 0.8));
+  }
+  100% {
+    background-position: -200% center;
+    filter: drop-shadow(0 0 5px rgba(44, 91, 255, 0.3));
+  }
+}
+
+/* Efecto hover suave */
+.journeyText:hover {
+  transform: scale(1.05);
+  transition: transform 0.5s ease; /* Transición suave */
+}
 
 .mainTitle {
   color: #1f2937;
@@ -115,11 +140,12 @@
   .formSection {
     flex: 0.5;
   }
-  
   .logoImg {
     height: 60px;
   }
-  
+  .journeyText {
+    font-size: 2.4rem;
+  }
   .mainTitle {
     font-size: 1.5rem;
   }
@@ -129,42 +155,43 @@
   .loginContainer {
     flex-direction: column;
   }
-  
   .formSection {
     flex: none;
     min-height: auto;
     padding: 1.5rem;
     order: 2;
   }
-
   .logo {
     gap: 1rem;
   }
-  
   .logoImg {
     height: 50px;
   }
-  
+  .journeyText {
+    font-size: 2rem;
+    letter-spacing: 1px;
+  }
   .mainTitle {
     font-size: 1.25rem;
   }
-  
   .formContent {
     gap: 1.5rem;
   }
-
+}
 
 @media (max-width: 480px) {
   .formSection {
     padding: 1rem;
   }
-  
   .logo {
     flex-direction: column;
     gap: 0.75rem;
   }
-  
   .logoImg {
     height: 40px;
   }
-}}
+  .journeyText {
+    font-size: 1.8rem;
+    min-height: 50px;
+  }
+}
