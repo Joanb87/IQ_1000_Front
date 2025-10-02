@@ -1,7 +1,8 @@
 import { auth } from '../config/firebase';
+import { API_URL } from '../config/api';
 
 export const api = {
-  baseURL: 'tu-api-url',
+  baseURL: API_URL,
   
   async getAuthHeaders() {
     const token = await auth.currentUser?.getIdToken();
@@ -13,7 +14,8 @@ export const api = {
 
   async fetchWithAuth(endpoint: string, options: RequestInit = {}) {
     const headers = await this.getAuthHeaders();
-    const response = await fetch(`${this.baseURL}${endpoint}`, {
+    const url = endpoint.startsWith('http') ? endpoint : `${this.baseURL}${endpoint}`;
+    const response = await fetch(url, {
       ...options,
       headers: {
         ...headers,
@@ -22,9 +24,16 @@ export const api = {
     });
 
     if (!response.ok) {
-      throw new Error('Error en la petición');
+      let detail: any = null;
+      try { detail = await response.json(); } catch { /* ignore */ }
+      const message = detail?.message || `Error ${response.status}`;
+      throw new Error(message);
     }
 
-    return response.json();
+    try {
+      return await response.json();
+    } catch {
+      return null; // No content
+    }
   }
 };

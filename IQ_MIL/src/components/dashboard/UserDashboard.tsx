@@ -28,41 +28,20 @@
 //   //   ], []);
 
 
-import React, { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect, useCallback } from 'react';
 import { DataTable_2 } from '../ui/DataTable/DataTable';
 import type { ColumnDef } from '@tanstack/react-table';
 import styles from './UserDashboard.module.css';
-import { userService } from '../../services/userService';
+import { seguimientoService, type Seguimiento } from '../../services/seguimientoService';
+import { useAuth } from '../../context/AuthContext';
 
-interface TeamMember {
-  id: number;
-  radicado: string;
-  nombre: string;
-  estado: string;
-  fecha_inicio: string;
-  fecha_fin: string;
-  total_minutos: number;
-  ruta_imagen: string;
-  total_servicios?: number;
-}
+interface TeamMember extends Seguimiento {}
 
 export const UserDashboard = () => {
-  const [teamData] = useState<TeamMember[]>([
-    { id: 1, radicado: 'RAD-2024-001', nombre: 'Juan Pérez', estado: 'LIQUIDADO', fecha_inicio: '2025-10-1', fecha_fin: '', total_minutos: 4800, ruta_imagen: '/images/juan.jpg', total_servicios: 5 },
-    { id: 2, radicado: 'RAD-2024-002', nombre: 'María García', estado: 'INCONSISTENCIA', fecha_inicio: '2025-10-1', fecha_fin: '', total_minutos: 3600, ruta_imagen: '/images/maria.jpg', total_servicios: 3 },
-    { id: 3, radicado: 'RAD-2024-003', nombre: 'Carlos López', estado: 'LIQUIDADO', fecha_inicio: '2025-10-1', fecha_fin: '2024-12-20', total_minutos: 5200, ruta_imagen: '/images/carlos.jpg', total_servicios: 7 },
-    { id: 4, radicado: 'RAD-2024-004', nombre: 'Ana Martínez', estado: 'LIQUIDADO', fecha_inicio: '2025-10-1', fecha_fin: '2024-10-15', total_minutos: 2400, ruta_imagen: '/images/ana.jpg', total_servicios: 4 },
-    { id: 5, radicado: 'RAD-2024-005', nombre: 'Luis Rodríguez', estado: 'LIQUIDADO', fecha_inicio: '2025-10-1', fecha_fin: '2024-08-30', total_minutos: 1800, ruta_imagen: '/images/luis.jpg', total_servicios: 2 },
-    { id: 6, radicado: 'RAD-2024-006', nombre: 'Sofía Ramírez', estado: 'DEVOLUCION', fecha_inicio: '2025-10-1', fecha_fin: '', total_minutos: 4200, ruta_imagen: '/images/sofia.jpg', total_servicios: 6 },
-    { id: 7, radicado: 'RAD-2024-007', nombre: 'Diego Torres', estado: 'INCONSISTENCIA', fecha_inicio: '2025-10-1', fecha_fin: '', total_minutos: 3900, ruta_imagen: '/images/diego.jpg', total_servicios: 4 },
-    { id: 8, radicado: 'RAD-2024-008', nombre: 'Laura Gómez', estado: 'DEVOLUCION', fecha_inicio: '2025-10-1', fecha_fin: '2024-09-15', total_minutos: 2100, ruta_imagen: '/images/laura.jpg', total_servicios: 3 },
-    { id: 9, radicado: 'RAD-2024-009', nombre: 'Miguel Ángel Ruiz', estado: 'INCONSISTENCIA', fecha_inicio: '2025-10-1', fecha_fin: '', total_minutos: 4500, ruta_imagen: '/images/miguel.jpg', total_servicios: 5 },
-    { id: 10, radicado: 'RAD-2024-010', nombre: 'Carolina Vargas', estado: 'NO COMPLETADO', fecha_inicio: '2025-10-1', fecha_fin: '2024-10-22', total_minutos: 2800, ruta_imagen: '/images/carolina.jpg', total_servicios: 3 },
-    { id: 11, radicado: 'RAD-2024-011', nombre: 'Andrés Castillo', estado: 'DEVOLUCION', fecha_inicio: '2025-10-1', fecha_fin: '', total_minutos: 1500, ruta_imagen: '/images/andres.jpg', total_servicios: 2 },
-    { id: 12, radicado: 'RAD-2024-012', nombre: 'Valentina Moreno', estado: 'NO COMPLETADO', fecha_inicio: '2025-10-1', fecha_fin: '2024-12-18', total_minutos: 4100, ruta_imagen: '/images/valentina.jpg', total_servicios: 5 },
-  ]);
+  const [teamData, setTeamData] = useState<TeamMember[]>([]);
 
   const [isLoading, setIsLoading] = useState(false);
+  const [isFetching, setIsFetching] = useState(false);
   const [selectedCase, setSelectedCase] = useState<TeamMember | null>(null);
   const [showModal, setShowModal] = useState(false);
   const [editForm, setEditForm] = useState({ total_servicios: 0, estado: '' });
@@ -72,7 +51,26 @@ export const UserDashboard = () => {
     return today;
   });
 
-  const estadosOptions = ['LIQUIDADO', 'INCONSISTENCIA', 'DEVOLUCION', 'NO COMPLETADO'];
+  const estadosOptions = ['ASIGNADA', 'LIQUIDADO', 'INCONSISTENCIA', 'DEVOLUCION', 'NO COMPLETADO'];
+
+  const { user } = useAuth();
+
+  const fetchData = useCallback(async () => {
+    if (!user) return;
+    try {
+      setIsFetching(true);
+      const data = await seguimientoService.listar({ fecha: dateFilter, usuario: user.email || undefined });
+      setTeamData(data || []);
+    } catch (error) {
+      console.error('Error cargando seguimientos:', error);
+    } finally {
+      setIsFetching(false);
+    }
+  }, [dateFilter, user]);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
 
   // Filtrar datos por fecha
   const filteredData = useMemo(() => {
@@ -93,13 +91,20 @@ export const UserDashboard = () => {
   }, [filteredData]);
 
   const handleCreateNewCase = async () => {
+    if (!user?.email) return alert('Usuario no disponible');
     try {
       setIsLoading(true);
-      const response = await userService.createNewCase();
-      console.log('Caso creado:', response);
+      const caso = await seguimientoService.tomarCaso(user.email);
+      // Si backend devuelve el caso, lo añadimos (o refrescamos todo por consistencia)
+      if (caso) {
+        // Evitamos duplicados por radicado o id
+        setTeamData(prev => [caso, ...prev.filter(c => c.id !== caso.id)]);
+      } else {
+        await fetchData();
+      }
     } catch (error) {
-      console.error('Error al crear caso:', error);
-      alert('Error al crear el caso');
+      console.error('Error al tomar caso:', error);
+      alert('Error al tomar un nuevo caso');
     } finally {
       setIsLoading(false);
     }
@@ -119,15 +124,21 @@ export const UserDashboard = () => {
   };
 
   const handleUpdateCase = async () => {
-    if (!selectedCase) return;
+    if (!selectedCase || !user?.email) return;
     try {
       setIsUpdating(true);
-      await userService.updateCase(selectedCase.id, editForm);
+      await seguimientoService.cerrarCaso({
+        usuario: user.email,
+        radicado: selectedCase.radicado,
+        total_servicios: editForm.total_servicios,
+        estado: editForm.estado
+      });
       alert('Caso actualizado exitosamente');
       handleCloseModal();
+      await fetchData();
     } catch (error) {
-      console.error('Error al actualizar caso:', error);
-      alert('Error al actualizar el caso');
+      console.error('Error al cerrar caso:', error);
+      alert('Error al cerrar el caso');
     } finally {
       setIsUpdating(false);
     }
@@ -135,14 +146,13 @@ export const UserDashboard = () => {
 
   const teamColumns = useMemo<ColumnDef<TeamMember>[]>(() => [
     { accessorKey: 'radicado', header: 'Radicado', meta: { filterType: 'text' }, enableSorting: true },
-    { accessorKey: 'nombre', header: 'Nombre', meta: { filterType: 'text' }, cell: ({ row }) => <div className={styles.nameCell}><strong>{row.getValue('nombre')}</strong></div> },
-    { accessorKey: 'estado', header: 'Estado', meta: { filterType: 'select', options: estadosOptions }, cell: ({ row }) => { const estado = row.getValue('estado') as string; const estadoClass = estado.toLowerCase().replace(/\s+/g, ''); return <span className={`${styles.statusBadge} ${styles[estadoClass] || ''}`}>{estado}</span>; } },
-    { accessorKey: 'fecha_inicio', header: 'Fecha Inicio', meta: { filterType: 'text' } },
-    { accessorKey: 'fecha_fin', header: 'Fecha Fin', meta: { filterType: 'text' }, cell: ({ row }) => row.getValue('fecha_fin') || '-' },
-    { accessorKey: 'total_minutos', header: 'Total Minutos', meta: { filterType: 'text' }, cell: ({ row }) => `${row.getValue('total_minutos')} min` },
-    { accessorKey: 'ruta_imagen', header: 'Imagen', meta: { filterType: 'text' }, cell: ({ row }) => `${row.getValue('ruta_imagen')}` },
-    { accessorKey: 'total_servicios', header: 'Total Servicios', meta: { filterType: 'text' }, cell: ({ row }) => `${row.original.total_servicios || 0}` },
-  ], []);
+    { accessorKey: 'nombre', header: 'Usuario', meta: { filterType: 'text' }, cell: ({ row }) => <div className={styles.nameCell}><strong>{row.getValue('nombre') as string}</strong></div> },
+  { accessorKey: 'estado', header: 'Estado', meta: { filterType: 'select', options: estadosOptions }, cell: ({ row }) => { const estado = row.getValue('estado') as string | undefined; if (!estado) return <span className={styles.statusBadge}>-</span>; const estadoClass = estado.toLowerCase().replace(/\s+/g, ''); return <span className={`${styles.statusBadge} ${styles[estadoClass] || ''}`}>{estado}</span>; } },
+    { accessorKey: 'fecha_inicio', header: 'Fecha Inicio', meta: { filterType: 'text' }, cell: ({ row }) => { const v = row.getValue('fecha_inicio') as string; return v ? v.split('T')[0] : '-'; } },
+    { accessorKey: 'fecha_fin', header: 'Fecha Fin', meta: { filterType: 'text' }, cell: ({ row }) => { const v = row.getValue('fecha_fin') as string | null; return v ? v.split('T')[0] : '-'; } },
+  { accessorKey: 'total_minutos', header: 'Total Minutos', meta: { filterType: 'text' }, cell: ({ row }) => { const val = row.getValue('total_minutos') as number | null; return val == null ? '' : `${val} min`; } },
+  { accessorKey: 'total_servicios', header: 'Total Servicios', meta: { filterType: 'text' }, cell: ({ row }) => { const v = row.original.total_servicios; return v == null ? '' : v; } },
+  ], [estadosOptions]);
 
 return (
   <div className={styles.dashboard}>
@@ -177,12 +187,16 @@ return (
               </button> */}
             </div>
           </div>
-          <button className={styles.newCaseButton} onClick={handleCreateNewCase} disabled={isLoading}>
-            {isLoading ? 'Creando...' : '+ Nuevo Caso'}
+          <button className={styles.newCaseButton} onClick={handleCreateNewCase} disabled={isLoading || !user}>
+            {isLoading ? 'Tomando...' : '+ Tomar Caso'}
           </button>
         </div>
         <div className={styles.tableContainer}>
-          <DataTable_2 data={filteredData} columns={teamColumns} pageSize={8} className={styles.customTable} onRowClick={handleRowClick} />
+          {isFetching ? (
+            <div className={styles.loading}>Cargando casos...</div>
+          ) : (
+            <DataTable_2 data={filteredData} columns={teamColumns} pageSize={8} className={styles.customTable} onRowClick={handleRowClick} />
+          )}
         </div>
       </section>
     </div>
