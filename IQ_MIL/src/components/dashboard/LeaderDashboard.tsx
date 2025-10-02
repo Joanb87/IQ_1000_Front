@@ -1,43 +1,17 @@
-import React, { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect, useCallback } from 'react';
 import { DataTable_2 } from '../ui/DataTable/DataTable';
 import type { ColumnDef } from '@tanstack/react-table';
 import styles from './LeaderDashboard.module.css';
-import { leaderService } from '../../services/leaderService';
+import { leaderService, type OperadorResumen } from '../../services/leaderService';
+import { useAuth } from '../../context/AuthContext';
+import type { Seguimiento } from '../../services/seguimientoService';
 
-interface TeamMember {
-  id: number;
-  nombre: string;
-  correo?: string;
-  total_minutos: number;
-  total_radicados: number;
-  total_servicios: number;
-}
-
-interface MemberDetail {
-  id: number;
-  radicado: string;
-  nombre: string;
-  estado: string;
-  fecha_inicio: string;
-  fecha_fin: string;
-  total_minutos: number;
-  ruta_imagen: string;
-  total_servicios?: number;
-}
+interface TeamMember extends OperadorResumen {}
+interface MemberDetail extends Seguimiento {}
 
 export const LeaderDashboard = () => {
-  const [teamData] = useState<TeamMember[]>([
-    { id: 1, nombre: 'Juan Pérez', correo: 'juan@example.com', total_minutos: 4800, total_radicados: 12, total_servicios: 5 },
-    { id: 2, nombre: 'María García', correo: 'maria@example.com', total_minutos: 3600, total_radicados: 8, total_servicios: 3 },
-    { id: 3, nombre: 'Carlos López', correo: 'carlos@example.com', total_minutos: 5200, total_radicados: 15, total_servicios: 7 },
-    { id: 4, nombre: 'Ana Martínez', correo: 'ana@example.com', total_minutos: 2400, total_radicados: 6, total_servicios: 4 },
-    { id: 5, nombre: 'Luis Rodríguez', correo: 'luis@example.com', total_minutos: 1800, total_radicados: 4, total_servicios: 2 },
-    { id: 6, nombre: 'Sofía Ramírez', correo: 'sofia@example.com', total_minutos: 4200, total_radicados: 11, total_servicios: 6 },
-    { id: 7, nombre: 'Diego Torres', correo: 'diego@example.com', total_minutos: 3900, total_radicados: 9, total_servicios: 4 },
-    { id: 8, nombre: 'Laura Gómez', correo: 'laura@example.com', total_minutos: 2100, total_radicados: 5, total_servicios: 3 },
-    { id: 9, nombre: 'Miguel Ángel Ruiz', correo: 'miguel@example.com', total_minutos: 4500, total_radicados: 13, total_servicios: 5 },
-    { id: 10, nombre: 'Carolina Vargas', correo: 'carolina@example.com', total_minutos: 2800, total_radicados: 7, total_servicios: 3 },
-  ]);
+  const [teamData, setTeamData] = useState<TeamMember[]>([]);
+  const [isLoadingResumen, setIsLoadingResumen] = useState(false);
 
   const [selectedMember, setSelectedMember] = useState<TeamMember | null>(null);
   const [memberDetails, setMemberDetails] = useState<MemberDetail[]>([]);
@@ -49,6 +23,26 @@ export const LeaderDashboard = () => {
   });
 
   const estadosOptions = ['LIQUIDADO', 'INCONSISTENCIA', 'DEVOLUCION', 'NO COMPLETADO'];
+
+  const { user } = useAuth();
+
+  const fetchResumen = useCallback(async () => {
+    if (!user?.email) return;
+    setIsLoadingResumen(true);
+    try {                                                            
+      const data = await leaderService.resumenOperadores(dateFilter, 'diana.giraldo@iq-online.com'); // user.email
+      setTeamData(data);
+    } catch (e) {
+      console.error('Error cargando resumen operadores:', e);
+      setTeamData([]);
+    } finally {
+      setIsLoadingResumen(false);
+    }
+  }, [user, dateFilter]);
+
+  useEffect(() => {
+    fetchResumen();
+  }, [fetchResumen]);
 
   // Calcular totales
   const totals = useMemo(() => {
@@ -72,17 +66,11 @@ export const LeaderDashboard = () => {
     setIsLoadingDetails(true);
     
     try {
-      const details = await leaderService.getMemberDetails(member.correo);
-      setMemberDetails(details);
+      const detalles = await leaderService.getMemberSeguimientos(member.correo, dateFilter);
+      setMemberDetails(detalles);
     } catch (error) {
       console.error('Error al obtener detalles:', error);
-      // Datos dummy mientras implementamos el backend
-      setMemberDetails([
-        { id: 1, radicado: 'RAD-2024-100', nombre: member.nombre, estado: 'LIQUIDADO', fecha_inicio: '2025-10-01', fecha_fin: '', total_minutos: 120, ruta_imagen: '/images/caso1.jpg', total_servicios: 2 },
-        { id: 2, radicado: 'RAD-2024-101', nombre: member.nombre, estado: 'INCONSISTENCIA', fecha_inicio: '2025-10-01', fecha_fin: '', total_minutos: 90, ruta_imagen: '/images/caso2.jpg', total_servicios: 1 },
-        { id: 3, radicado: 'RAD-2024-102', nombre: member.nombre, estado: 'DEVOLUCION', fecha_inicio: '2025-10-01', fecha_fin: '2025-10-01', total_minutos: 150, ruta_imagen: '/images/caso3.jpg', total_servicios: 3 },
-        { id: 4, radicado: 'RAD-2024-103', nombre: member.nombre, estado: 'LIQUIDADO', fecha_inicio: '2025-10-01', fecha_fin: '2025-10-01', total_minutos: 200, ruta_imagen: '/images/caso4.jpg', total_servicios: 4 },
-      ]);
+      setMemberDetails([]);
     } finally {
       setIsLoadingDetails(false);
     }
@@ -129,16 +117,15 @@ export const LeaderDashboard = () => {
       header: 'Estado', 
       meta: { filterType: 'select', options: estadosOptions }, 
       cell: ({ row }) => { 
-        const estado = row.getValue('estado') as string; 
-        const estadoClass = estado.toLowerCase().replace(/\s+/g, ''); 
-        return <span className={`${styles.statusBadge} ${styles[estadoClass] || ''}`}>{estado}</span>; 
+        const estado = row.original.estado; 
+        const estadoClass = estado?.toLowerCase().replace(/\s+/g, '') || ''; 
+        return <span className={`${styles.statusBadge} ${estadoClass && styles[estadoClass] ? styles[estadoClass] : ''}`}>{estado}</span>; 
       } 
     },
     { accessorKey: 'fecha_inicio', header: 'Fecha Inicio', meta: { filterType: 'text' } },
-    { accessorKey: 'fecha_fin', header: 'Fecha Fin', meta: { filterType: 'text' }, cell: ({ row }) => row.getValue('fecha_fin') || '-' },
-    { accessorKey: 'total_minutos', header: 'Total Minutos', meta: { filterType: 'text' }, cell: ({ row }) => `${row.getValue('total_minutos')} min` },
-    { accessorKey: 'ruta_imagen', header: 'Imagen', meta: { filterType: 'text' }, cell: ({ row }) => `${row.getValue('ruta_imagen')}` },
-    { accessorKey: 'total_servicios', header: 'Total Servicios', meta: { filterType: 'text' }, cell: ({ row }) => `${row.original.total_servicios || 0}` },
+    { accessorKey: 'fecha_fin', header: 'Fecha Fin', meta: { filterType: 'text' }, cell: ({ row }) => row.original.fecha_fin || '-' },
+    { accessorKey: 'total_minutos', header: 'Total Minutos', meta: { filterType: 'text' }, cell: ({ row }) => { const v = row.original.total_minutos; return v == null ? '' : `${v} min`; } },
+    { accessorKey: 'total_servicios', header: 'Total Servicios', meta: { filterType: 'text' }, cell: ({ row }) => { const v = row.original.total_servicios; return v == null ? '' : v; } },
   ], []);
 
   // Calcular estadísticas de detalle
@@ -179,18 +166,17 @@ export const LeaderDashboard = () => {
               </div>
             </div>
 
-            {isLoadingDetails ? (
-              <div className={styles.loading}>Cargando detalles...</div>
-            ) : (
-              <div className={styles.tableContainer}>
-                <DataTable_2 
-                  data={memberDetails} 
-                  columns={detailColumns} 
-                  pageSize={8} 
-                  className={styles.customTable} 
-                />
-              </div>
-            )}
+            <div className={styles.tableContainer + ' ' + styles.loadingWrapper}>
+              {isLoadingDetails && (
+                <div className={styles.loadingOverlay} aria-label="Cargando detalles" />
+              )}
+              <DataTable_2 
+                data={memberDetails} 
+                columns={detailColumns} 
+                pageSize={8} 
+                className={styles.customTable} 
+              />
+            </div>
           </section>
         </div>
       </div>
@@ -228,7 +214,10 @@ export const LeaderDashboard = () => {
               </div>
             </div>
           </div>
-          <div className={styles.tableContainer}>
+          <div className={styles.tableContainer + ' ' + styles.loadingWrapper}>
+            {isLoadingResumen && (
+              <div className={styles.loadingOverlay} aria-label="Cargando resumen" />
+            )}
             <DataTable_2 
               data={teamData} 
               columns={teamColumns} 
