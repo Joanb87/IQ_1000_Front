@@ -21,6 +21,8 @@ type ColumnMeta = {
   filterType?: FilterType;
   options?: Array<string | number | boolean>;
   editable?: boolean;
+  editType?: 'text' | 'select';
+  editOptions?: Array<{ value: any; label: string }>; // para select
 
   /** Tamaños opcionales por columna */
   minWidth?: number | string; // ej: 140 o '12rem' o '20ch'
@@ -256,6 +258,7 @@ export function DataTable_2<T extends Record<string, any>>({
                   {row.getVisibleCells().map((cell) => {
                     const columnMeta = (cell.column.columnDef as any).meta as ColumnMeta | undefined;
                     const isEditable = columnMeta?.editable ?? false;
+                    const editType = columnMeta?.editType || 'text';
                     const columnId = cell.column.id;
                     const originalValue = cell.getValue();
                     const currentValue = getCellValue(rowIdentifier, columnId, originalValue);
@@ -278,13 +281,27 @@ export function DataTable_2<T extends Record<string, any>>({
                         }}
                       >
                         {isEditable ? (
-                          <input
-                            type="text"
-                            className={styles.editInput}
-                            value={currentValue ?? ''}
-                            onChange={(e) => updateCellValue(rowIdentifier, columnId, e.target.value)}
-                            onClick={(e) => e.stopPropagation()}
-                          />
+                          editType === 'select' ? (
+                            <select
+                              className={styles.editSelect}
+                              value={currentValue ?? ''}
+                              onChange={(e) => updateCellValue(rowIdentifier, columnId, e.target.value)}
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              <option value="">--</option>
+                              {columnMeta?.editOptions?.map(opt => (
+                                <option key={String(opt.value)} value={opt.value}>{opt.label}</option>
+                              ))}
+                            </select>
+                          ) : (
+                            <input
+                              type="text"
+                              className={styles.editInput}
+                              value={currentValue ?? ''}
+                              onChange={(e) => updateCellValue(rowIdentifier, columnId, e.target.value)}
+                              onClick={(e) => e.stopPropagation()}
+                            />
+                          )
                         ) : (
                           flexRender(cell.column.columnDef.cell, cell.getContext())
                         )}
