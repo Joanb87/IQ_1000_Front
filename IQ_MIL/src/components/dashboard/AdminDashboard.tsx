@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect, useCallback } from 'react';
+import React, { useState, useMemo, useEffect, useCallback, useRef } from 'react';
 import styles from './AdminDashboard.module.css';
 import { AdminDashboard as AdminAssignator } from './Admin_Asignator';
 import { DataTable_2 } from '../ui/DataTable/DataTable_2';
@@ -13,25 +13,43 @@ export const AdminDashboard = () => {
   const [activeSection, setActiveSection] = useState<'assign' | 'data' | null>(null);
   
   const [tableData, setTableData] = useState<AdminRecord[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [fechaFiltro, setFechaFiltro] = useState<string>('');
+  const [isInitialLoading, setIsInitialLoading] = useState(false);
+  const [fechaFiltro, setFechaFiltro] = useState<string>(() => new Date().toISOString().split('T')[0]);
+  // Eliminado HUD de progreso: ya no se guarda estado de progreso para UI
+  const [pageIndex, setPageIndex] = useState(0);
+  const abortRef = useRef<AbortController | null>(null);
 
-  const loadCasos = useCallback(async () => {
-    setIsLoading(true);
-    try {
-  const casos = await adminService.listarCasos(fechaFiltro || undefined);
-      setTableData(casos);
-    } catch (e) {
-      console.error('Error cargando casos:', e);
-      setTableData([]);
-    } finally {
-      setIsLoading(false);
-    }
+  const startProgressiveLoad = useCallback(() => {
+    if (!fechaFiltro) return;
+    // Cancelar previa
+    abortRef.current?.abort();
+    const controller = new AbortController();
+    abortRef.current = controller;
+  setTableData([]);
+  setPageIndex(0); // reiniciar a primera página sólo al nuevo fetch
+  setIsInitialLoading(true);
+
+    adminService.progressiveLoadCasos({
+      dateFrom: fechaFiltro,
+      pageSize: 2000,
+      order: 'DESC',
+      signal: controller.signal,
+      onChunk: (chunk, info) => {
+  setTableData(prev => prev.concat(chunk)); // mantiene orden y no resetea manualmente pageIndex
+        if (info.page === 1) setIsInitialLoading(false);
+      }
+    }).catch(err => {
+      if (err?.name !== 'AbortError') {
+        console.error('Error carga progresiva:', err);
+      }
+      setIsInitialLoading(false);
+    });
   }, [fechaFiltro]);
 
   useEffect(() => {
-    loadCasos();
-  }, [loadCasos]);
+    startProgressiveLoad();
+    return () => abortRef.current?.abort();
+  }, [startProgressiveLoad]);
 
   // ← Definición de columnas con las editables marcadas
   const adminColumns = useMemo<ColumnDef<AdminRecord>[]>(
@@ -154,15 +172,18 @@ export const AdminDashboard = () => {
           <div style={{display:'flex',gap:'1rem',padding:'0.75rem 1rem',alignItems:'center'}}>
             <label style={{fontSize:'0.8rem',fontWeight:600}}>Fecha:</label>
             <input type="date" value={fechaFiltro} onChange={(e)=>setFechaFiltro(e.target.value)} style={{padding:'0.35rem 0.5rem',border:'1px solid #d1d5db',borderRadius:6}} />
-            <button onClick={loadCasos} style={{padding:'0.4rem 0.9rem',borderRadius:6,border:'1px solid #ed1b22',background:'#ed1b22',color:'#fff',fontSize:'0.75rem',fontWeight:600,cursor:'pointer'}}>Refrescar</button>
+            <button onClick={startProgressiveLoad} style={{padding:'0.4rem 0.9rem',borderRadius:6,border:'1px solid #ed1b22',background:'#ed1b22',color:'#fff',fontSize:'0.75rem',fontWeight:600,cursor:'pointer'}}>Refrescar</button>
+            {/* Eliminado HUD de progreso para hacerlo transparente al usuario */}
           </div>
-          {isLoading && <div className={styles.loadingOverlay} aria-label="Cargando casos" />}
+          {isInitialLoading && <div className={styles.loadingOverlay} aria-label="Cargando casos" />}
           <DataTable_2
             data={tableData}
             columns={adminColumns}
             pageSize={10}
             identifierKey="radicado" // ← Usar 'radicado' como identificador único
             onSaveChanges={handleSaveChanges} // ← Pasar la función para guardar cambios
+            externalPageIndex={pageIndex}
+            onPageChange={setPageIndex}
           />
         </div>
       </div>

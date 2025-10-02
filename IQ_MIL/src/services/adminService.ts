@@ -77,53 +77,84 @@ export const adminService = {
     });
   },
 
-  // Métodos específicos para el admin
-  async getUsers() {
-    return api.fetchWithAuth('/admin/users');
+  // --- Cache simple en memoria por fechaFrom ---
+  _cacheCasos: {} as Record<string, Caso[]>,
+  getCachedCasos(dateFrom?: string) {
+    return this._cacheCasos[dateFrom || '_all'];
   },
 
-  async getSystemMetrics() {
-    return api.fetchWithAuth('/admin/metrics');
+  getAllCachedCasos(): Caso[] {
+    const all: Caso[] = [];
+    for (const arr of Object.values(this._cacheCasos)) {
+      if (Array.isArray(arr)) all.push(...arr);
+    }
+    return all;
   },
 
-  async updateUserRole(userId: string, role: string) {
-    return api.fetchWithAuth('/admin/users/role', {
-      method: 'PUT',
-      body: JSON.stringify({ userId, role })
-    });
+  // Obtiene una página del backend con la nueva firma: /casos?dateFrom=YYYY-MM-DD&page=1&limit=2000&order=DESC
+  async fetchCasosPage(params: { dateFrom: string; page: number; limit: number; order?: 'ASC' | 'DESC'; }): Promise<{ data: Caso[]; meta: { total: number; page: number; limit: number; totalPages: number; hasNext: boolean; hasPrev: boolean; }; }> {
+    const { dateFrom, page, limit, order = 'DESC' } = params;
+    const url = `/casos?dateFrom=${encodeURIComponent(dateFrom)}&page=${page}&limit=${limit}&order=${order}`;
+    const resp = await api.fetchWithAuth(url);
+    const rawArr: CasoRaw[] = resp?.data || [];
+    const meta = resp?.meta || { total: rawArr.length, page, limit, totalPages: 1, hasNext: false, hasPrev: page > 1 };
+    return { data: rawArr.map(adaptCaso), meta };
   },
 
-  /**
-   * Actualiza un registro específico en la base de datos
-   * @param radicado - El identificador único del registro (radicado)
-   * @param columnId - El nombre de la columna a actualizar
-   * @param newValue - El nuevo valor para la columna
-   */
+  // Carga progresiva en segundo plano (append incremental)
+  async progressiveLoadCasos(options: {
+    dateFrom: string;
+    pageSize?: number; // default 2000
+    order?: 'ASC' | 'DESC';
+    onChunk: (chunk: Caso[], info: { loaded: number; total: number; page: number; pageSize: number; done: boolean; }) => void;
+    signal?: AbortSignal;
+  }) {
+    const { dateFrom, pageSize = 2500, order = 'DESC', onChunk, signal } = options;
+    let page = 1;
+    let total = 0;
+    let loaded = 0;
+    const all: Caso[] = [];
+    const cacheKey = dateFrom || '_all';
+
+    while (!signal?.aborted) {
+      const { data, meta } = await this.fetchCasosPage({ dateFrom, page, limit: pageSize, order });
+      if (page === 1) total = meta.total;
+      if (!data.length) {
+        onChunk([], { loaded, total, page, pageSize, done: true });
+        break;
+      }
+      all.push(...data);
+      loaded += data.length;
+      const done = !meta.hasNext || loaded >= total;
+      onChunk(data, { loaded, total, page, pageSize, done });
+      if (done) break;
+      page += 1;
+    }
+    if (!signal?.aborted) {
+      this._cacheCasos[cacheKey] = all;
+    }
+    return { aborted: !!signal?.aborted, totalLoaded: loaded, totalExpected: total, data: all };
+  },
+
+  // Actualiza un campo de un caso por radicado (usa caché + fallback)
   async updateRecord(radicado: string, columnId: string, newValue: any) {
     // TODO: Optimizar cuando exista endpoint directo por radicado.
-    const lista = await this.listarCasos();
-    const found = lista.find(c => c.radicado === radicado);
+    // Buscar en todos los caches acumulados (multi fecha si existiera)
+    let found: Caso | undefined = this.getAllCachedCasos().find(c => c.radicado === radicado);
+    // Fallback mínimo: si no está cacheado aún, intentar una llamada rápida a listarCasos (sin filtros) como último recurso.
+    if (!found) {
+      try {
+        const lista = await this.listarCasos();
+        found = lista.find(c => c.radicado === radicado);
+      } catch {
+        // ignorar, mantendremos not found
+      }
+    }
     if (!found) throw new Error(`Caso con radicado ${radicado} no encontrado`);
     return this.actualizarCasoParcial(found.id, { [columnId]: newValue });
 
-    /* 
-     * Alternativa si prefieres enviar todo en el body:
-     * 
-     * return api.fetchWithAuth('/admin/records/update', {
-     *   method: 'PATCH',
-     *   body: JSON.stringify({
-     *     radicado: radicado,
-     *     field: columnId,
-     *     value: newValue
-     *   })
-     * });
-     */
   },
-
-  /**
-   * Actualiza múltiples registros en una sola llamada (opcional, más eficiente)
-   * @param updates - Array de actualizaciones a realizar
-   */
+  // Actualización batch simple (secuencial)
   async updateRecordsBatch(updates: Array<{
     radicado: string;
     field: string;

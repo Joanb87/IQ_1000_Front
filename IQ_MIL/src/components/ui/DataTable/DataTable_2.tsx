@@ -40,6 +40,8 @@ export interface DataTableProps<T extends Record<string, any>> {
     columnId: string;
     newValue: any;
   }>) => Promise<void>;
+  externalPageIndex?: number; // Control externo opcional
+  onPageChange?: (pageIndex: number) => void; // Notificación externa
 }
 
 /* ---------- FilterFns ---------- */
@@ -67,6 +69,8 @@ export function DataTable_2<T extends Record<string, any>>({
   onRowClick,
   identifierKey = 'id',
   onSaveChanges,
+  externalPageIndex,
+  onPageChange,
 }: DataTableProps<T>) {
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [sorting, setSorting] = useState<SortingState>([]);
@@ -93,7 +97,7 @@ export function DataTable_2<T extends Record<string, any>>({
   const table = useReactTable({
     data,
     columns: columnsWithFilters,
-    state: { columnFilters, sorting },
+    state: { columnFilters, sorting, pagination: externalPageIndex != null ? { pageIndex: externalPageIndex, pageSize } : undefined },
     onColumnFiltersChange: setColumnFilters,
     onSortingChange: setSorting,
     getCoreRowModel: getCoreRowModel(),
@@ -103,6 +107,16 @@ export function DataTable_2<T extends Record<string, any>>({
     getFacetedRowModel: getFacetedRowModel(),
     getFacetedUniqueValues: getFacetedUniqueValues(),
     initialState: { pagination: { pageSize } },
+    onPaginationChange: updater => {
+      if (onPageChange) {
+        const next = typeof updater === 'function' ? updater({ pageIndex: externalPageIndex || 0, pageSize }) : updater;
+        if (typeof next === 'object' && 'pageIndex' in next) {
+          onPageChange(next.pageIndex as number);
+        }
+      }
+    },
+    // Evita que tanstack resetee la página a 0 cuando cambia data
+    autoResetPageIndex: false,
   });
 
   useEffect(() => {
@@ -259,10 +273,8 @@ export function DataTable_2<T extends Record<string, any>>({
                         key={cell.id}
                         className={`${styles.td} ${isEdited ? styles.editedCell : ''}`}
                         title={titleText} // tooltip con contenido completo
-                        onClick={(e) => {
-                          if (!isEditable && onRowClick) {
-                            onRowClick(row.original);
-                          }
+                        onClick={() => {
+                          if (!isEditable && onRowClick) onRowClick(row.original);
                         }}
                       >
                         {isEditable ? (
