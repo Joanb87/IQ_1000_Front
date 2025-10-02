@@ -1,33 +1,3 @@
-
-//   // const teamColumns = useMemo<ColumnDef<TeamMember>[]>(() => [
-//   //   { accessorKey: 'id', header: 'ID', enableColumnFilter: false, enableSorting: true },
-//   //   { accessorKey: 'radicado', header: 'Radicado', enableColumnFilter: false, enableSorting: true },
-//   //   { accessorKey: 'nombre', header: 'Nombre', meta: { filterType: 'text' }, cell: ({ row }) => <div className={styles.nameCell}><strong>{row.getValue('nombre')}</strong></div> },
-//   //   { accessorKey: 'estado', header: 'Estado', meta: { filterType: 'select' } },
-//   //   { accessorKey: 'fecha_inicio', header: 'Fecha Inicio', meta: { filterType: 'select' } },
-//   //   { accessorKey: 'fecha_fin', header: 'Fecha Fin', meta: { filterType: 'select' } },
-//   //   { accessorKey: 'total_minutos', header: 'Total Minutos', meta: { filterType: 'text' } },
-//   //   {
-//   //       accessorKey: 'ruta_imagen',
-//   //       header: 'Imagen',
-//   //       meta: {
-//   //         filterType: 'multiselect', // MULTISELECT (cámbialo a 'select' si lo prefieres)
-//   //         options: ['Activo', 'Inactivo', 'Vacaciones'],
-//   //       },
-//   //       cell: ({ row }) => {
-//   //         const estado = row.getValue('estado') as string;
-//   //         const estadoClass = estado.toLowerCase().replace(/\s+/g, '');
-//   //         return (
-//   //           <span className={`${styles.statusBadge} ${styles[estadoClass] || ''}`}>
-//   //             {estado}
-//   //           </span>
-//   //         );
-//   //       },
-//   //     },
-
-//   //   ], []);
-
-
 import { useState, useMemo, useEffect, useCallback } from 'react';
 import { DataTable_2 } from '../ui/DataTable/DataTable';
 import type { ColumnDef } from '@tanstack/react-table';
@@ -51,7 +21,7 @@ export const UserDashboard = () => {
     return today;
   });
 
-  const estadosOptions = ['ASIGNADA', 'LIQUIDADO', 'INCONSISTENCIA', 'DEVOLUCION', 'NO COMPLETADO'];
+  const estadosOptions = ['LIQUIDADO', 'INCONSISTENCIA', 'DEVOLUCION', 'NO COMPLETADO'];
 
   const { user } = useAuth();
 

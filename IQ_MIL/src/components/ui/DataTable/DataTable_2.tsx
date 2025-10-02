@@ -1,5 +1,13 @@
 import { useEffect, useRef, useState, useMemo } from 'react';
-import {useReactTable,getCoreRowModel,getFilteredRowModel,getSortedRowModel,getPaginationRowModel,getFacetedRowModel,getFacetedUniqueValues,flexRender,
+import {
+  useReactTable,
+  getCoreRowModel,
+  getFilteredRowModel,
+  getSortedRowModel,
+  getPaginationRowModel,
+  getFacetedRowModel,
+  getFacetedUniqueValues,
+  flexRender,
   type ColumnDef,
   type ColumnFiltersState,
   type SortingState,
@@ -12,7 +20,12 @@ type FilterType = 'text' | 'select' | 'multiselect' | 'none';
 type ColumnMeta = {
   filterType?: FilterType;
   options?: Array<string | number | boolean>;
-  editable?: boolean; // ← Nueva propiedad para columnas editables
+  editable?: boolean;
+
+  /** Tamaños opcionales por columna */
+  minWidth?: number | string; // ej: 140 o '12rem' o '20ch'
+  width?: number | string;    // ej: 200 o '20ch'
+  maxWidth?: number | string; // ej: 360 o '30rem'
 };
 
 export interface DataTableProps<T extends Record<string, any>> {
@@ -21,12 +34,12 @@ export interface DataTableProps<T extends Record<string, any>> {
   pageSize?: number;
   className?: string;
   onRowClick?: (row: T) => void;
-  identifierKey?: string; // ← Clave única del registro (ej: 'radicado', 'id')
+  identifierKey?: string; // ej: 'radicado' o 'id'
   onSaveChanges?: (changes: Array<{
     identifier: string | number;
     columnId: string;
     newValue: any;
-  }>) => Promise<void>; // ← Callback para guardar cambios
+  }>) => Promise<void>;
 }
 
 /* ---------- FilterFns ---------- */
@@ -52,13 +65,13 @@ export function DataTable_2<T extends Record<string, any>>({
   pageSize = 10,
   className = '',
   onRowClick,
-  identifierKey = 'id', // ← Por defecto usa 'id'
+  identifierKey = 'id',
   onSaveChanges,
 }: DataTableProps<T>) {
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [sorting, setSorting] = useState<SortingState>([]);
-  
-  // ← Estado para almacenar las ediciones pendientes
+
+  // Ediciones pendientes
   const [editedCells, setEditedCells] = useState<Map<string, any>>(new Map());
   const [isSaving, setIsSaving] = useState(false);
 
@@ -98,13 +111,12 @@ export function DataTable_2<T extends Record<string, any>>({
     }
   }, [pageSize, table]);
 
-  // ← Función para obtener el valor de una celda (editado o original)
+  // Valor mostrado (editado u original)
   const getCellValue = (rowId: string, columnId: string, originalValue: any) => {
     const key = `${rowId}-${columnId}`;
     return editedCells.has(key) ? editedCells.get(key) : originalValue;
   };
 
-  // ← Función para actualizar el valor de una celda
   const updateCellValue = (rowId: string, columnId: string, newValue: any) => {
     const key = `${rowId}-${columnId}`;
     setEditedCells(prev => {
@@ -114,13 +126,11 @@ export function DataTable_2<T extends Record<string, any>>({
     });
   };
 
-  // ← Función para verificar si una celda fue editada
   const isCellEdited = (rowId: string, columnId: string) => {
     const key = `${rowId}-${columnId}`;
     return editedCells.has(key);
   };
 
-  // ← Función para guardar cambios
   const handleSaveChanges = async () => {
     if (!onSaveChanges || editedCells.size === 0) return;
 
@@ -130,25 +140,19 @@ export function DataTable_2<T extends Record<string, any>>({
         const [rowId, columnId] = key.split('-');
         const row = data.find((item: any) => String(item[identifierKey]) === rowId);
         const identifier = row ? row[identifierKey] : rowId;
-        
-        return {
-          identifier,
-          columnId,
-          newValue,
-        };
+
+        return { identifier, columnId, newValue };
       });
 
       await onSaveChanges(changes);
-      setEditedCells(new Map()); // Limpiar ediciones después de guardar
+      setEditedCells(new Map()); // limpiar
     } catch (error) {
       console.error('Error al guardar cambios:', error);
-      // Aquí podrías mostrar un mensaje de error al usuario
     } finally {
       setIsSaving(false);
     }
   };
 
-  // ← Función para cancelar cambios
   const handleCancelChanges = () => {
     setEditedCells(new Map());
   };
@@ -159,7 +163,7 @@ export function DataTable_2<T extends Record<string, any>>({
 
   return (
     <div className={`${styles.tableContainer} ${className}`}>
-      {/* ← Barra de acciones cuando hay cambios pendientes */}
+      {/* Barra de acciones para cambios pendientes */}
       {editedCells.size > 0 && (
         <div className={styles.actionBar}>
           <span className={styles.changesCount}>
@@ -186,6 +190,19 @@ export function DataTable_2<T extends Record<string, any>>({
 
       <div className={styles.tableWrapper}>
         <table className={styles.table}>
+          {/* ⬇️ Tamaños por columna */}
+          <colgroup>
+            {table.getVisibleLeafColumns().map((col) => {
+              const meta = col.columnDef?.meta as ColumnMeta | undefined;
+              const style: React.CSSProperties = {
+                minWidth: meta?.minWidth ?? 140, // fallback si no definen meta
+                width: meta?.width,
+                maxWidth: meta?.maxWidth,
+              };
+              return <col key={col.id} style={style} />;
+            })}
+          </colgroup>
+
           <thead>
             {table.getHeaderGroups().map((headerGroup) => (
               <tr key={headerGroup.id}>
@@ -196,6 +213,7 @@ export function DataTable_2<T extends Record<string, any>>({
                         className={styles.headerLabel}
                         onClick={header.column.getToggleSortingHandler()}
                         style={{ cursor: header.column.getCanSort() ? 'pointer' : 'default' }}
+                        title={String(header.column.columnDef.header ?? '')}
                       >
                         {flexRender(header.column.columnDef.header, header.getContext())}
                         {header.column.getIsSorted() && (
@@ -215,10 +233,10 @@ export function DataTable_2<T extends Record<string, any>>({
           <tbody>
             {rows.map((row) => {
               const rowIdentifier = String((row.original as any)[identifierKey]);
-              
+
               return (
-                <tr 
-                  key={row.id} 
+                <tr
+                  key={row.id}
                   className={`${styles.tr} ${onRowClick ? styles.clickableRow : ''}`}
                 >
                   {row.getVisibleCells().map((cell) => {
@@ -229,12 +247,19 @@ export function DataTable_2<T extends Record<string, any>>({
                     const currentValue = getCellValue(rowIdentifier, columnId, originalValue);
                     const isEdited = isCellEdited(rowIdentifier, columnId);
 
+                    const titleText =
+                      currentValue == null
+                        ? ''
+                        : typeof currentValue === 'string'
+                        ? currentValue
+                        : String(currentValue);
+
                     return (
-                      <td 
-                        key={cell.id} 
+                      <td
+                        key={cell.id}
                         className={`${styles.td} ${isEdited ? styles.editedCell : ''}`}
+                        title={titleText} // tooltip con contenido completo
                         onClick={(e) => {
-                          // Solo ejecutar onRowClick si no es una celda editable o no se hizo clic en el input
                           if (!isEditable && onRowClick) {
                             onRowClick(row.original);
                           }
@@ -246,7 +271,7 @@ export function DataTable_2<T extends Record<string, any>>({
                             className={styles.editInput}
                             value={currentValue ?? ''}
                             onChange={(e) => updateCellValue(rowIdentifier, columnId, e.target.value)}
-                            onClick={(e) => e.stopPropagation()} // Prevenir que se dispare onRowClick
+                            onClick={(e) => e.stopPropagation()}
                           />
                         ) : (
                           flexRender(cell.column.columnDef.cell, cell.getContext())
@@ -315,10 +340,7 @@ function Filter({ column }: { column: any }) {
   useEffect(() => {
     if (open && rootRef.current) {
       const rect = rootRef.current.getBoundingClientRect();
-      setPopoverPos({
-        top: rect.bottom + 6,
-        left: rect.left,
-      });
+      setPopoverPos({ top: rect.bottom + 6, left: rect.left });
     }
   }, [open]);
 
@@ -393,12 +415,23 @@ function Filter({ column }: { column: any }) {
         </button>
 
         {open && (
-          <div className={styles.popover}>
+          <div
+            className={styles.popover}
+            style={{ top: popoverPos.top, left: popoverPos.left }} // posiciona el popover
+          >
             <div className={styles.popoverHeader}>
-              <button type="button" className={styles.smallBtn} onClick={() => column.setFilterValue(undefined)}>
+              <button
+                type="button"
+                className={styles.smallBtn}
+                onClick={() => column.setFilterValue(undefined)}
+              >
                 Limpiar
               </button>
-              <button type="button" className={styles.smallBtn} onClick={() => setOpen(false)}>
+              <button
+                type="button"
+                className={styles.smallBtn}
+                onClick={() => setOpen(false)}
+              >
                 Cerrar
               </button>
             </div>
