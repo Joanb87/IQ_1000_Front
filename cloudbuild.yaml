@@ -1,0 +1,26 @@
+substitutions:
+  _PROJECT_ID: 'iq-analitica'
+  _HOSTING_TARGET: 'neps'
+
+steps:
+  - name: 'gcr.io/cloud-builders/npm'
+    dir: 'IQ_MIL'
+    args: ['ci']
+
+  - name: 'gcr.io/cloud-builders/npm'
+    dir: 'IQ_MIL'
+    args: ['run', 'build']
+
+  - name: 'node:20'
+    dir: 'IQ_MIL'
+    entrypoint: bash
+    args:
+      - -c
+      - |
+        npm install -g firebase-tools
+        firebase deploy --project=${_PROJECT_ID} --only=hosting:${_HOSTING_TARGET}
+
+options:
+  logging: CLOUD_LOGGING_ONLY
+
+timeout: 900s

@@ -1,0 +1,12 @@
+{
+  "projects": {
+    "default": "iq-analitica"
+  },
+  "targets": {
+    "iq-analitica": {
+      "hosting": {
+        "neps": ["asignador-neps"]
+      }
+    }
+  }
+}

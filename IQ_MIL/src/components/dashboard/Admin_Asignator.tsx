@@ -144,19 +144,6 @@ export const AdminDashboard: React.FC = () => {
       <div className={styles.header}>
         <h1>Usuarios & Asignaciones</h1>
         <div className={styles.actions}>
-          {/* <div className={styles.searchBar}>
-            <input
-              className={styles.searchInput}
-              placeholder="Buscar correo o nombre..."
-              value={searchQuery}
-              onChange={e => setSearchQuery(e.target.value)}
-            />
-            {searchQuery && (
-              <button className={styles.btnIcon} onClick={() => setSearchQuery('')} title="Limpiar">
-                <X size={14} />
-              </button>
-            )}
-          </div> */}
           <button className={styles.btnPrimary} onClick={() => setShowModal('user')} disabled={saving}>+ Crear Usuario</button>
         </div>
       </div>
@@ -168,7 +155,7 @@ export const AdminDashboard: React.FC = () => {
         onSaveChanges={onSaveChanges as any}
         externalPageIndex={pageIndex}
         onPageChange={setPageIndex}
-        pageSize={20}
+        pageSize={8}
       />
 
       {showModal === 'user' && (

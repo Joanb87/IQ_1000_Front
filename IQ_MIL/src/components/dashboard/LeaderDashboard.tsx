@@ -99,7 +99,7 @@ export const LeaderDashboard = () => {
       { 
         accessorKey: 'nombre', 
         header: 'Nombre de Usuario', 
-        meta: { filterType: 'text', options: nombreOptions }, 
+        meta: { filterType: 'multiselect', options: nombreOptions }, 
         cell: ({ row }) => (
           <div className={styles.nameCell}>
             <strong>{row.getValue('nombre')}</strong>
