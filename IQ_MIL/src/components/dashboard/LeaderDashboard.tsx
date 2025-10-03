@@ -53,6 +53,8 @@ export const LeaderDashboard = () => {
     };
   }, [teamData]);
 
+  const openCasesCount = useMemo(() => teamData.filter(m => m.caso_abierto).length, [teamData]);
+
   const formatTime = (minutes: number) => {
     const hours = Math.floor(minutes / 60);
     const mins = minutes % 60;
@@ -81,34 +83,50 @@ export const LeaderDashboard = () => {
     setMemberDetails([]);
   };
 
-  const teamColumns = useMemo<ColumnDef<TeamMember>[]>(() => [
-    { 
-      accessorKey: 'nombre', 
-      header: 'Nombre de Usuario', 
-      meta: { filterType: 'text' }, 
-      cell: ({ row }) => (
-        <div className={styles.nameCell}>
-          <strong>{row.getValue('nombre')}</strong>
-        </div>
-      )
-    },
-    { 
-      accessorKey: 'total_minutos', 
-      header: 'Tiempo', 
-      meta: { filterType: 'text' }, 
-      cell: ({ row }) => formatTime(row.getValue('total_minutos'))
-    },
-    { 
-      accessorKey: 'total_radicados', 
-      header: 'Total Radicados', 
-      meta: { filterType: 'text' }
-    },
-    { 
-      accessorKey: 'total_servicios', 
-      header: 'Total Servicios', 
-      meta: { filterType: 'text' }
-    },
-  ], []);
+  const teamColumns = useMemo<ColumnDef<TeamMember>[]>(() => {
+    const nombreOptions = Array.from(new Set(teamData.map(t => t.nombre))).sort();
+    return [
+      { 
+        accessorKey: 'nombre', 
+        header: 'Nombre de Usuario', 
+        meta: { filterType: 'select', options: nombreOptions }, 
+        cell: ({ row }) => (
+          <div className={styles.nameCell}>
+            <strong>{row.getValue('nombre')}</strong>
+          </div>
+        )
+      },
+      { 
+        accessorKey: 'total_minutos', 
+        header: 'Tiempo', 
+        meta: { filterType: 'text' }, 
+        cell: ({ row }) => formatTime(row.getValue('total_minutos'))
+      },
+      { 
+        accessorKey: 'total_radicados', 
+        header: 'Total Radicados', 
+        meta: { filterType: 'text' }
+      },
+      { 
+        accessorKey: 'total_servicios', 
+        header: 'Total Servicios', 
+        meta: { filterType: 'text' }
+      },
+      {
+        accessorKey: 'caso_abierto',
+        header: 'Caso Abierto',
+        meta: { filterType: 'select', options: [true, false] },
+        cell: ({ row }) => {
+          const abierto = row.original.caso_abierto;
+          return (
+            <span className={abierto ? styles.badgeOpen : styles.badgeClosed}>
+              {abierto ? 'Sí' : 'No'}
+            </span>
+          );
+        }
+      },
+    ];
+  }, [teamData]);
 
   const detailColumns = useMemo<ColumnDef<MemberDetail>[]>(() => [
     { accessorKey: 'radicado', header: 'Radicado', meta: { filterType: 'text' }, enableSorting: true },
@@ -202,6 +220,10 @@ export const LeaderDashboard = () => {
                 <div className={styles.statCard}>
                   <div className={styles.statCount}>{totals.totalServicios}</div>
                   <div className={styles.statLabel}>Total Servicios</div>
+                </div>
+                <div className={styles.statCard}>
+                  <div className={styles.statCount}>{openCasesCount}</div>
+                  <div className={styles.statLabel}>Casos Abiertos</div>
                 </div>
               </div>
               <div className={styles.dateFilter}>

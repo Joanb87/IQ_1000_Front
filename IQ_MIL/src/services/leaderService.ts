@@ -9,6 +9,7 @@ interface ResumenOperadorRaw {
   tempo_total_min: string;   // números como string
   radicados: string;
   total_servicios: string;
+  caso_abierto?: boolean;    // nuevo campo opcional
 }
 
 export interface OperadorResumen {
@@ -17,6 +18,7 @@ export interface OperadorResumen {
   total_minutos: number;
   total_radicados: number;
   total_servicios: number;
+  caso_abierto: boolean;
 }
 
 export const leaderService = {
@@ -32,6 +34,7 @@ export const leaderService = {
       total_minutos: parseInt(r.tempo_total_min || '0', 10) || 0,
       total_radicados: parseInt(r.radicados || '0', 10) || 0,
       total_servicios: parseInt(r.total_servicios || '0', 10) || 0,
+      caso_abierto: !!r.caso_abierto,
     }));
   },
 
