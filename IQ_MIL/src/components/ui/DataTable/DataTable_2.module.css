@@ -289,7 +289,8 @@
 
 .multiControl {
   width: 100%;
-  min-height: 34px;
+  min-width: 100px;
+  min-height: 28px;
   padding: 6px 32px 6px 10px;
   border: 1px solid #d9e0e7;
   border-radius: 8px;
@@ -297,10 +298,13 @@
   font-size: 12px;
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-start;
   gap: 6px;
   cursor: pointer;
   transition: border-color 0.15s, box-shadow 0.15s, background 0.15s;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .multiControl:hover {
@@ -314,40 +318,12 @@
   box-shadow: 0 0 0 3px rgba(44, 91, 255, 0.12);
 }
 
-
-.placeholder,
-.selectedCount {
+.placeholder {
   color: var(--tbl-muted-2);
-  font-size: 12px;
 }
 
-.badges {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-}
-
-.badge {
-  display: inline-flex;
-  align-items: center;
-  background: #eef5ff;
-  color: #1e5cb3;
-  border: 1px solid #d6e6ff;
-  border-radius: 999px;
-  padding: 2px 8px;
-  font-size: 11px;
-  font-weight: 500;
-}
-
-.moreBadge {
-  display: inline-flex;
-  align-items: center;
-  background: #f1f5f9;
-  color: #475569;
-  border: 1px solid #e2e8f0;
-  border-radius: 999px;
-  padding: 2px 8px;
-  font-size: 11px;
+.selectedCount {
+  color: var(--tbl-text);
   font-weight: 500;
 }
 
@@ -365,7 +341,7 @@
 .popover {
   position: fixed;
   width: 280px;
-  max-height: 260px;
+  max-height: 320px;
   background: #ffffff;
   border: 1px solid var(--tbl-border);
   border-radius: 12px;
@@ -401,9 +377,37 @@
   border-color: #d7dee6;
 }
 
+.searchBox {
+  padding: 8px;
+  border-bottom: 1px solid #eef2f7;
+  background: #fff;
+}
+
+.searchInput {
+  width: 100%;
+  padding: 6px 10px;
+  border: 1px solid #d9e0e7;
+  border-radius: 8px;
+  font-size: 12px;
+  background: #fff;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.searchInput:focus,
+.searchInput:focus-visible {
+  outline: none;
+  border-color: var(--tbl-accent);
+  box-shadow: 0 0 0 3px rgba(44, 91, 255, 0.12);
+}
+
+.searchInput::placeholder {
+  color: var(--tbl-muted-2);
+}
+
 .optionsList {
   padding: 8px 6px;
   overflow: auto;
+  flex: 1;
 }
 
 .optionRow {
@@ -429,6 +433,13 @@
 .optionLabel {
   font-size: 12px;
   color: #334155;
+}
+
+.noResults {
+  padding: 12px;
+  text-align: center;
+  color: var(--tbl-muted-2);
+  font-size: 12px;
 }
 
 /* ===== Botón limpiar (para select simple) ===== */
@@ -498,7 +509,6 @@
 .clickableRow:hover {
   background-color: #f3f6ff;
 }
-
 
 /* ===== Select de edición ===== */
 .editSelect {

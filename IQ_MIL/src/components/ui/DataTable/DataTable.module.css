@@ -158,6 +158,7 @@
 
 .multiControl {
   width: 100%;
+  min-width: 140px;
   min-height: 34px;
   padding: 6px 32px 6px 10px;
   border: 1px solid #d9e0e7;
@@ -166,10 +167,13 @@
   font-size: 12px;
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-start;
   gap: 6px;
   cursor: pointer;
   transition: border-color 0.15s, box-shadow 0.15s, background 0.15s;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .multiControl:hover { border-color: #c9d6e2; }
@@ -317,6 +321,33 @@
   background: var(--tbl-surface-2);
   border-top: 1px solid var(--tbl-border);
   border-radius: 0 0 var(--tbl-radius) var(--tbl-radius);
+}
+
+.searchBox {
+  padding: 8px;
+  border-bottom: 1px solid #eef2f7;
+  background: #fff;
+}
+
+.searchInput {
+  width: 100%;
+  padding: 6px 10px;
+  border: 1px solid #d9e0e7;
+  border-radius: 8px;
+  font-size: 12px;
+  background: #fff;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.searchInput:focus,
+.searchInput:focus-visible {
+  outline: none;
+  border-color: var(--tbl-accent);
+  box-shadow: 0 0 0 3px rgba(44, 91, 255, 0.12);
+}
+
+.searchInput::placeholder {
+  color: var(--tbl-muted-2);
 }
 
 .paginationButton {

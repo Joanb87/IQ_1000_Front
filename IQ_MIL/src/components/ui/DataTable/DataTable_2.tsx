@@ -423,10 +423,16 @@ function Filter({ column }: { column: any }) {
 
   if (filterType === 'multiselect') {
     const selected = (Array.isArray(columnFilterValue) ? columnFilterValue : []) as string[];
+    const [searchTerm, setSearchTerm] = useState('');
+    
     const toggleValue = (val: string) => {
       const next = selected.includes(val) ? selected.filter((v) => v !== val) : [...selected, val];
       column.setFilterValue(next.length ? next : undefined);
     };
+
+    const filteredValues = uniqueValues.filter(value => 
+      value.toLowerCase().includes(searchTerm.toLowerCase())
+    );
 
     return (
       <div className={styles.multiRoot} ref={rootRef}>
@@ -439,12 +445,9 @@ function Filter({ column }: { column: any }) {
           {selected.length === 0 ? (
             <span className={styles.placeholder}>Todos</span>
           ) : (
-            <div className={styles.badges}>
-              {selected.slice(0, 3).map((v) => (
-                <span key={v} className={styles.badge}>{v}</span>
-              ))}
-              {selected.length > 3 && <span className={styles.moreBadge}>+{selected.length - 3}</span>}
-            </div>
+            <span className={styles.selectedCount}>
+              {selected.length} seleccionado{selected.length !== 1 ? 's' : ''}
+            </span>
           )}
           <span className={styles.caret} />
         </button>
@@ -452,7 +455,7 @@ function Filter({ column }: { column: any }) {
         {open && (
           <div
             className={styles.popover}
-            style={{ top: popoverPos.top, left: popoverPos.left }} // posiciona el popover
+            style={{ top: popoverPos.top, left: popoverPos.left }}
           >
             <div className={styles.popoverHeader}>
               <button
@@ -471,8 +474,19 @@ function Filter({ column }: { column: any }) {
               </button>
             </div>
 
+            <div className={styles.searchBox}>
+              <input
+                type="text"
+                className={styles.searchInput}
+                placeholder="Buscar..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                onClick={(e) => e.stopPropagation()}
+              />
+            </div>
+
             <div className={styles.optionsList}>
-              {uniqueValues.map((value) => {
+              {filteredValues.map((value) => {
                 const id = `${column.id}__${value || 'empty'}`;
                 const checked = selected.includes(value);
                 return (
@@ -488,6 +502,9 @@ function Filter({ column }: { column: any }) {
                   </label>
                 );
               })}
+              {filteredValues.length === 0 && (
+                <div className={styles.noResults}>No se encontraron resultados</div>
+              )}
             </div>
           </div>
         )}
