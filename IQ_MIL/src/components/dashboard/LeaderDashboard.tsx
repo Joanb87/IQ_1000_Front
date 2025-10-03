@@ -89,7 +89,7 @@ export const LeaderDashboard = () => {
       { 
         accessorKey: 'nombre', 
         header: 'Nombre de Usuario', 
-        meta: { filterType: 'select', options: nombreOptions }, 
+        meta: { filterType: 'text', options: nombreOptions }, 
         cell: ({ row }) => (
           <div className={styles.nameCell}>
             <strong>{row.getValue('nombre')}</strong>
@@ -99,18 +99,18 @@ export const LeaderDashboard = () => {
       { 
         accessorKey: 'total_minutos', 
         header: 'Tiempo', 
-        meta: { filterType: 'text' }, 
+        meta: { filterType: 'none' }, 
         cell: ({ row }) => formatTime(row.getValue('total_minutos'))
       },
       { 
         accessorKey: 'total_radicados', 
         header: 'Total Radicados', 
-        meta: { filterType: 'text' }
+        meta: { filterType: 'none' }
       },
       { 
         accessorKey: 'total_servicios', 
         header: 'Total Servicios', 
-        meta: { filterType: 'text' }
+        meta: { filterType: 'none' }
       },
       {
         accessorKey: 'caso_abierto',
@@ -140,10 +140,10 @@ export const LeaderDashboard = () => {
         return <span className={`${styles.statusBadge} ${estadoClass && styles[estadoClass] ? styles[estadoClass] : ''}`}>{estado}</span>; 
       } 
     },
-    { accessorKey: 'fecha_inicio', header: 'Fecha Inicio', meta: { filterType: 'text' } },
-    { accessorKey: 'fecha_fin', header: 'Fecha Fin', meta: { filterType: 'text' }, cell: ({ row }) => row.original.fecha_fin || '-' },
-    { accessorKey: 'total_minutos', header: 'Total Minutos', meta: { filterType: 'text' }, cell: ({ row }) => { const v = row.original.total_minutos; return v == null ? '' : `${v} min`; } },
-    { accessorKey: 'total_servicios', header: 'Total Servicios', meta: { filterType: 'text' }, cell: ({ row }) => { const v = row.original.total_servicios; return v == null ? '' : v; } },
+    { accessorKey: 'fecha_inicio', header: 'Fecha Inicio', meta: { filterType: 'none' } },
+    { accessorKey: 'fecha_fin', header: 'Fecha Fin', meta: { filterType: 'none' }, cell: ({ row }) => row.original.fecha_fin || '-' },
+    { accessorKey: 'total_minutos', header: 'Total Minutos', meta: { filterType: 'none' }, cell: ({ row }) => { const v = row.original.total_minutos; return v == null ? '' : `${v} min`; } },
+    { accessorKey: 'total_servicios', header: 'Total Servicios', meta: { filterType: 'none' }, cell: ({ row }) => { const v = row.original.total_servicios; return v == null ? '' : v; } },
   ], []);
 
   // Calcular estadísticas de detalle
