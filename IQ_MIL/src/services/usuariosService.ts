@@ -25,12 +25,29 @@ function adapt(u: UsuarioRaw): Usuario {
   };
 }
 
+let _cacheUsuarios: Usuario[] | null = null;
+let _inFlightUsuarios: Promise<Usuario[]> | null = null;
+let _lastUsuariosTs = 0;
+const STALE_MS = 1000 * 60 * 10; // 10 minutos
+
 export const usuariosService = {
-  async listar(): Promise<Usuario[]> {
-    const resp = await api.fetchWithAuth('/usuarios');
-    const arr: UsuarioRaw[] = Array.isArray(resp) ? resp : resp?.data || [];
-    return arr.map(adapt);
+  async listar(forceRefresh = false): Promise<Usuario[]> {
+    const now = Date.now();
+    if (!forceRefresh && _cacheUsuarios && (now - _lastUsuariosTs) < STALE_MS) return _cacheUsuarios;
+    if (_inFlightUsuarios) return _inFlightUsuarios;
+    _inFlightUsuarios = (async () => {
+      try {
+        const resp = await api.fetchWithAuth('/usuarios');
+        const arr: UsuarioRaw[] = Array.isArray(resp) ? resp : resp?.data || [];
+        _cacheUsuarios = arr.map(adapt);
+        _lastUsuariosTs = Date.now();
+        return _cacheUsuarios;
+      } finally { _inFlightUsuarios = null; }
+    })();
+    return _inFlightUsuarios;
   },
+  clearCache() { _cacheUsuarios = null; _lastUsuariosTs = 0; },
+  getCached() { return _cacheUsuarios; },
   async obtener(correo: string): Promise<Usuario | null> {
     try { const r = await api.fetchWithAuth(`/usuarios/${encodeURIComponent(correo)}`); return adapt(r); } catch { return null; }
   },

@@ -3,6 +3,8 @@ import styles from './AdminDashboard.module.css';
 import { AdminDashboard as AdminAssignator } from './Admin_Asignator';
 import { DataTable_2 } from '../ui/DataTable/DataTable_2';
 import { adminService, type Caso } from '../../services/adminService';
+import { estadosService, type Estado } from '../../services/estadosService';
+import { usuariosService, type Usuario } from '../../services/usuariosService';
 import type { ColumnDef } from '@tanstack/react-table';
 
 type AdminRecord = Caso & {
@@ -21,6 +23,25 @@ export const AdminDashboard = () => {
   const [fileToUpload, setFileToUpload] = useState<File | null>(null);
   const [uploadStatus, setUploadStatus] = useState<'idle' | 'uploading' | 'success' | 'error'>( 'idle');
   const [uploadMessage, setUploadMessage] = useState<string>('');
+  const [estados, setEstados] = useState<Estado[]>([]);
+  const [usuarios, setUsuarios] = useState<Usuario[]>([]);
+
+  // Cargar catálogo de estados una sola vez
+  useEffect(() => {
+    (async () => {
+      try { const list = await estadosService.listar(); setEstados(list); } catch { /* ignore */ }
+    })();
+  }, []);
+
+  // Cargar usuarios (cacheados) una sola vez
+  useEffect(() => {
+    (async () => {
+      try { const list = await usuariosService.listar(); setUsuarios(list); } catch { /* ignore */ }
+    })();
+  }, []);
+
+  const estadoIdToNombre = useMemo(() => Object.fromEntries(estados.map(e => [e.id, e.nombre])), [estados]);
+  const estadoNombreToId = useMemo(() => Object.fromEntries(estados.map(e => [e.nombre, e.id])), [estados]);
 
   const startProgressiveLoad = useCallback(() => {
     if (!fechaFiltro) return;
@@ -106,13 +127,57 @@ export const AdminDashboard = () => {
         }
       },
       { accessorKey: 'total_servicios', header: 'Total Servicios' },
-      { accessorKey: 'lider', header: 'Líder', meta: { filterType: 'text', editable: true } }, // ← Columna editable
-      { accessorKey: 'usuario_asignacion', header: 'Usuario Asignación', meta: { filterType: 'text' } },
+      {
+        accessorKey: 'lider',
+        header: 'Líder',
+        cell: ({ row }) => {
+          const v = row.getValue('lider') as string | null;
+          if (!v) return '';
+          const u = usuarios.find(x => x.correo === v);
+            return u?.nombre ? `${u.nombre} (${v})` : v;
+        },
+        meta: {
+          filterType: 'select',
+          options: usuarios.map(u => u.correo),
+          editable: true,
+          editType: 'select',
+          editOptions: usuarios.map(u => ({ value: u.correo, label: u.nombre ? `${u.nombre} (${u.correo})` : u.correo }))
+        }
+      },
+      {
+        accessorKey: 'usuario_asignacion',
+        header: 'Usuario Asignación',
+        cell: ({ row }) => {
+          const v = row.getValue('usuario_asignacion') as string | null;
+          if (!v) return '';
+          const u = usuarios.find(x => x.correo === v);
+          return u?.nombre ? `${u.nombre} (${v})` : v;
+        },
+        meta: {
+          filterType: 'select',
+          options: usuarios.map(u => u.correo),
+          editable: false
+        }
+      },
       { accessorKey: 'total_servicios_usuario', header: 'Total Servicios Usuario' },
-      { accessorKey: 'estado_id', header: 'Estado ID', meta: { filterType: 'text', editable: true } },
+      {
+        accessorKey: 'estado_id',
+        header: 'Estado',
+        cell: ({ row }) => {
+          const id = row.getValue('estado_id') as number | null;
+          return id == null ? '' : (estadoIdToNombre[id] || id);
+        },
+        meta: {
+          filterType: 'select',
+          options: estados.map(e => String(e.id)),
+          editable: true,
+          editType: 'select',
+          editOptions: estados.map(e => ({ value: e.id, label: e.nombre }))
+        }
+      },
       { accessorKey: 'prioridad', header: 'Prioridad', meta: { filterType: 'text', editable: true } },
     ], 
-    []
+    [estados, estadoIdToNombre]
   );
 
   // ← Función para manejar el guardado de cambios
@@ -124,10 +189,23 @@ export const AdminDashboard = () => {
     try {
       // Llamar al servicio para cada cambio
       for (const change of changes) {
+        let valueToSend = change.newValue;
+        // Si se edita estado_id pero el usuario (futuro) escribe nombre, intentar mapear
+        if (change.columnId === 'estado_id') {
+          if (typeof valueToSend === 'string' && /\D/.test(valueToSend)) {
+            // Contiene letras: intentar buscar id por nombre exacto
+            const maybeId = estadoNombreToId[valueToSend];
+            if (maybeId) valueToSend = maybeId;
+          } else if (typeof valueToSend === 'string') {
+            // número string
+            const parsed = parseInt(valueToSend, 10);
+            if (!isNaN(parsed)) valueToSend = parsed;
+          }
+        }
         await adminService.updateRecord(
           change.identifier as string,
           change.columnId,
-          change.newValue
+          valueToSend
         );
       }
 
@@ -139,7 +217,11 @@ export const AdminDashboard = () => {
           if (index !== -1) {
             newData[index] = {
               ...newData[index],
-              [change.columnId]: change.newValue
+              [change.columnId]: change.columnId === 'estado_id'
+                ? (typeof change.newValue === 'string' && /\D/.test(change.newValue)
+                    ? estadoNombreToId[change.newValue] ?? change.newValue
+                    : change.newValue)
+                : change.newValue
             };
           }
         });

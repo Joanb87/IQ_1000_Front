@@ -127,14 +127,20 @@ export function DataTable_2<T extends Record<string, any>>({
     }
   }, [pageSize, table]);
 
+  // Helpers de clave segura para evitar conflictos con '-' en IDs
+  const makeKey = (rowId: string | number, columnId: string) => JSON.stringify([String(rowId), columnId]);
+  const parseKey = (key: string): [string, string] => {
+    try { const [r, c] = JSON.parse(key); return [String(r), String(c)]; } catch { return ['', '']; }
+  };
+
   // Valor mostrado (editado u original)
   const getCellValue = (rowId: string, columnId: string, originalValue: any) => {
-    const key = `${rowId}-${columnId}`;
+    const key = makeKey(rowId, columnId);
     return editedCells.has(key) ? editedCells.get(key) : originalValue;
   };
 
   const updateCellValue = (rowId: string, columnId: string, newValue: any) => {
-    const key = `${rowId}-${columnId}`;
+    const key = makeKey(rowId, columnId);
     setEditedCells(prev => {
       const next = new Map(prev);
       next.set(key, newValue);
@@ -143,7 +149,7 @@ export function DataTable_2<T extends Record<string, any>>({
   };
 
   const isCellEdited = (rowId: string, columnId: string) => {
-    const key = `${rowId}-${columnId}`;
+    const key = makeKey(rowId, columnId);
     return editedCells.has(key);
   };
 
@@ -153,7 +159,7 @@ export function DataTable_2<T extends Record<string, any>>({
     setIsSaving(true);
     try {
       const changes = Array.from(editedCells.entries()).map(([key, newValue]) => {
-        const [rowId, columnId] = key.split('-');
+        const [rowId, columnId] = parseKey(key);
         const row = data.find((item: any) => String(item[identifierKey]) === rowId);
         const identifier = row ? row[identifierKey] : rowId;
 

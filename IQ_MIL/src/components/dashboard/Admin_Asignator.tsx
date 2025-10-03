@@ -73,12 +73,7 @@ export const AdminDashboard: React.FC = () => {
     } catch (e: any) { setError(e?.message || 'Error creando usuario'); } finally { setSaving(false); }
   };
 
-  const removeUser = useCallback(async (correo: string) => {
-    if (!confirm('¿Eliminar este usuario?')) return;
-    setSaving(true); setError(null);
-    try { await usuariosService.eliminar(correo); setUsuarios(prev => prev.filter(u => u.correo !== correo)); }
-    catch { setError('Error eliminando usuario'); } finally { setSaving(false); }
-  }, []);
+  // Eliminado: no se permite eliminar usuarios desde esta vista
 
   const toggleActivo = useCallback(async (u: Usuario) => {
     setSaving(true); setError(null);
@@ -141,9 +136,8 @@ export const AdminDashboard: React.FC = () => {
     { accessorKey: 'nombre', header: 'Nombre', meta: { filterType: 'text', editable: true, editType: 'text', minWidth: 180 } },
     { accessorKey: 'role_id', header: 'Rol', cell: info => roleNameById[info.getValue() as number] || '', meta: { filterType: 'select', options: roles.map(r => r.id), minWidth: 120 } },
     { accessorKey: 'id_lider', header: 'Líder', cell: info => { const val = info.getValue<string | null>(); if (!val) return ''; const opt = leaderOptions.find(o => o.value === val); return opt?.label || val; }, meta: { filterType: 'select', editable: true, editType: 'select', editOptions: leaderOptions, minWidth: 200 } },
-    { accessorKey: 'activo', header: 'Activo', cell: info => { const row = info.row.original as Usuario; return <button className={row.activo ? styles.badgeActive : styles.badgeInactive} onClick={() => toggleActivo(row)} disabled={saving}>{row.activo ? 'Sí' : 'No'}</button>; }, meta: { filterType: 'select', options: [true, false], minWidth: 90 } },
-    { id: 'acciones', header: 'Acciones', cell: info => { const u = info.row.original as Usuario; return <button className={styles.btnDangerSmall} onClick={() => removeUser(u.correo)} disabled={saving}>Eliminar</button>; }, meta: { filterType: 'none', minWidth: 110 } }
-  ], [leaderOptions, removeUser, roleNameById, roles, saving, toggleActivo]);
+    { accessorKey: 'activo', header: 'Activo', cell: info => { const row = info.row.original as Usuario; return <button className={row.activo ? styles.badgeActive : styles.badgeInactive} onClick={() => toggleActivo(row)} disabled={saving}>{row.activo ? 'Sí' : 'No'}</button>; }, meta: { filterType: 'select', options: [true, false], minWidth: 90 } }
+  ], [leaderOptions, roleNameById, roles, saving, toggleActivo]);
 
   return (
     <div className={styles.dashboard}>
