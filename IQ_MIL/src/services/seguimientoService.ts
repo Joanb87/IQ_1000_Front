@@ -1,6 +1,6 @@
 import { api } from './api';
 
-// Mapeos provisionales nombre <-> id (ajusta si el backend define otros valores)
+// Mapeos provisionales nombre <-> id
 const ESTADO_ID_MAP: Record<string, number> = {
   'LIQUIDADO': 1,
   'INCONSISTENCIA': 3,
@@ -12,10 +12,10 @@ const ESTADO_ID_TO_NOMBRE: Record<number, string> = Object.entries(ESTADO_ID_MAP
   .reduce((acc, [nombre, id]) => { acc[id] = nombre; return acc; }, {} as Record<number, string>);
 
 interface SeguimientoRaw {
-  id: string;              // Viene como string
+  id: string;
   radicado: string;
-  usuario: string;         // correo
-  estado_id: number;       // id numérico
+  usuario: string;
+  estado_id: number;
   fecha_inicio: string;
   fecha_fin: string | null;
   total_minutos: number | null;
@@ -27,14 +27,14 @@ export interface Seguimiento {
   id: string;
   radicado: string;
   usuario: string;
-  nombre: string;              // derivado del correo
+  nombre: string;
   estado_id: number;
-  estado: string;              // nombre amigable
+  estado: string;
   fecha_inicio: string;
   fecha_fin: string | null;
-  total_minutos: number | null;   // se mantiene null si viene null
-  total_servicios: number | null; // se mantiene null si viene null
-  raw: SeguimientoRaw;         // referencia completa
+  total_minutos: number | null;
+  total_servicios: number | null;
+  raw: SeguimientoRaw;
 }
 
 function adapt(raw: SeguimientoRaw): Seguimiento {
@@ -65,17 +65,29 @@ export const seguimientoService = {
     return Array.isArray(data) ? data.map(adapt) : [];
   },
 
-  async tomarCaso(correo: string) {
-    const raw = await api.fetchWithAuth('/seguimiento/tomar-caso', {
+  // añadimos esto mondaface Devuelve objeto con bandera para mostrar overlay en el UI
+  async tomarCaso(correo: string): Promise<{ caso: Seguimiento | null; alreadyAssigned: boolean }> {
+    const resp = await api.fetchWithAuth('/seguimiento/tomar-caso', {
       method: 'POST',
       body: JSON.stringify({ correo })
-    }) as SeguimientoRaw | null;
-    if (raw && typeof raw === 'object' && 'estado_id' in raw) return adapt(raw);
-    return null;
+    });
+
+    // Backend: [] => ya tienes un caso abierto y no te asignan otro
+    if (Array.isArray(resp) && resp.length === 0) {
+      return { caso: null, alreadyAssigned: true };
+    }
+
+    // Caso asignado
+    if (resp && typeof resp === 'object' && 'estado_id' in resp) {
+      return { caso: adapt(resp as SeguimientoRaw), alreadyAssigned: false };
+    }
+
+    // Otro caso: null/undefined/u otro tipo
+    return { caso: null, alreadyAssigned: false };
   },
 
   async cerrarCaso(params: { usuario: string; radicado: string; total_servicios: number; estado: string }) {
-  const estado_id = (ESTADO_ID_MAP[params.estado] ?? Number(params.estado.replace('ESTADO_', ''))) || 0;
+    const estado_id = (ESTADO_ID_MAP[params.estado] ?? Number(params.estado.replace('ESTADO_', ''))) || 0;
     return api.fetchWithAuth('/seguimiento/cerrar-caso', {
       method: 'POST',
       body: JSON.stringify({

@@ -13,15 +13,13 @@ type AdminRecord = Caso & {
 
 export const AdminDashboard = () => {
   const [activeSection, setActiveSection] = useState<'assign' | 'data' | null>(null);
-  
   const [tableData, setTableData] = useState<AdminRecord[]>([]);
   const [isInitialLoading, setIsInitialLoading] = useState(false);
   const [fechaFiltro, setFechaFiltro] = useState<string>(() => new Date().toISOString().split('T')[0]);
-  // Eliminado HUD de progreso: ya no se guarda estado de progreso para UI
   const [pageIndex, setPageIndex] = useState(0);
   const abortRef = useRef<AbortController | null>(null);
   const [fileToUpload, setFileToUpload] = useState<File | null>(null);
-  const [uploadStatus, setUploadStatus] = useState<'idle' | 'uploading' | 'success' | 'error'>( 'idle');
+  const [uploadStatus, setUploadStatus] = useState<'idle' | 'uploading' | 'success' | 'error'>('idle');
   const [uploadMessage, setUploadMessage] = useState<string>('');
   const [estados, setEstados] = useState<Estado[]>([]);
   const [usuarios, setUsuarios] = useState<Usuario[]>([]);
@@ -29,14 +27,20 @@ export const AdminDashboard = () => {
   // Cargar catálogo de estados una sola vez
   useEffect(() => {
     (async () => {
-      try { const list = await estadosService.listar(); setEstados(list); } catch { /* ignore */ }
+      try {
+        const list = await estadosService.listar();
+        setEstados(list);
+      } catch { /* ignore */ }
     })();
   }, []);
 
   // Cargar usuarios (cacheados) una sola vez
   useEffect(() => {
     (async () => {
-      try { const list = await usuariosService.listar(); setUsuarios(list); } catch { /* ignore */ }
+      try {
+        const list = await usuariosService.listar();
+        setUsuarios(list);
+      } catch { /* ignore */ }
     })();
   }, []);
 
@@ -49,9 +53,9 @@ export const AdminDashboard = () => {
     abortRef.current?.abort();
     const controller = new AbortController();
     abortRef.current = controller;
-  setTableData([]);
-  setPageIndex(0); // reiniciar a primera página sólo al nuevo fetch
-  setIsInitialLoading(true);
+    setTableData([]);
+    setPageIndex(0);
+    setIsInitialLoading(true);
 
     adminService.progressiveLoadCasos({
       dateFrom: fechaFiltro,
@@ -59,7 +63,7 @@ export const AdminDashboard = () => {
       order: 'DESC',
       signal: controller.signal,
       onChunk: (chunk, info) => {
-  setTableData(prev => prev.concat(chunk)); // mantiene orden y no resetea manualmente pageIndex
+        setTableData(prev => prev.concat(chunk));
         if (info.page === 1) setIsInitialLoading(false);
       }
     }).catch(err => {
@@ -90,7 +94,6 @@ export const AdminDashboard = () => {
       await adminService.uploadExcel(fileToUpload);
       setUploadStatus('success');
       setUploadMessage('Archivo procesado correctamente');
-      // Refrescar datos después de una pequeña pausa para que backend termine ingesta
       setTimeout(() => startProgressiveLoad(), 600);
     } catch (e: any) {
       setUploadStatus('error');
@@ -98,35 +101,32 @@ export const AdminDashboard = () => {
     }
   };
 
-  // ← Definición de columnas con las editables marcadas
   const adminColumns = useMemo<ColumnDef<AdminRecord>[]>(
     () => [
-      // { accessorKey: 'id', header: 'ID', enableColumnFilter: false },
       { accessorKey: 'radicado', header: 'Radicado', meta: { filterType: 'text' } },
-      { accessorKey: 'ips_nit', header: 'IPS NIT', meta: { filterType: 'text' } },
-      { accessorKey: 'ips_nombre', header: 'IPS Nombre', meta: { filterType: 'text' } },
-      { accessorKey: 'factura', header: 'Factura', meta: { filterType: 'text' } },
-      {
-        accessorKey: 'valor_factura',
+      { accessorKey: 'ips_nit', header: 'IPS NIT', meta: { filterType: 'none' } },
+      { accessorKey: 'ips_nombre', header: 'IPS Nombre', meta: { filterType: 'multiselect' } },
+      { accessorKey: 'factura', header: 'Factura', meta: { filterType: 'none' } },
+      { accessorKey: 'valor_factura',
         header: 'Valor Factura',
         cell: ({ row }) => {
           const v = row.getValue('valor_factura') as number | null;
           if (v == null) return '';
           return `$${v.toLocaleString('es-CO')}`;
         },
-        meta: { editable: true },
+        meta: { editable: true, filterType: 'none'  },
       },
-      { accessorKey: 'ruta_imagen', header: 'Ruta Imagen', meta: { filterType: 'text' } },
-      { accessorKey: 'caso', header: 'Caso', meta: { filterType: 'text', editable: true } }, // ← Columna editable
+      { accessorKey: 'ruta_imagen', header: 'Ruta Imagen', meta: { filterType: 'multiselect' } },
+      { accessorKey: 'caso', header: 'Caso', meta: { filterType: 'none', editable: true } },
       {
         accessorKey: 'fecha_asignacion',
         header: 'Fecha Asignación',
         cell: ({ row }) => {
           const v = row.getValue('fecha_asignacion') as string | null;
           return v ? new Date(v).toLocaleDateString('es-CO') : '';
-        }
+        },meta: { filterType: 'none' }
       },
-      { accessorKey: 'total_servicios', header: 'Total Servicios' },
+      { accessorKey: 'total_servicios', header: 'Total Servicios',meta: { filterType: 'none' } },
       {
         accessorKey: 'lider',
         header: 'Líder',
@@ -134,14 +134,17 @@ export const AdminDashboard = () => {
           const v = row.getValue('lider') as string | null;
           if (!v) return '';
           const u = usuarios.find(x => x.correo === v);
-            return u?.nombre ? `${u.nombre} (${v})` : v;
+          return u?.nombre ? `${u.nombre} (${v})` : v;
         },
         meta: {
           filterType: 'select',
           options: usuarios.map(u => u.correo),
           editable: true,
           editType: 'select',
-          editOptions: usuarios.map(u => ({ value: u.correo, label: u.nombre ? `${u.nombre} (${u.correo})` : u.correo }))
+          editOptions: usuarios.map(u => ({
+            value: u.correo,
+            label: u.nombre ? `${u.nombre} (${u.correo})` : u.correo
+          }))
         }
       },
       {
@@ -159,7 +162,7 @@ export const AdminDashboard = () => {
           editable: false
         }
       },
-      { accessorKey: 'total_servicios_usuario', header: 'Total Servicios Usuario' },
+      { accessorKey: 'total_servicios_usuario', header: 'Total Servicios Usuario',meta: { filterType: 'none' }},
       {
         accessorKey: 'estado_id',
         header: 'Estado',
@@ -175,29 +178,24 @@ export const AdminDashboard = () => {
           editOptions: estados.map(e => ({ value: e.id, label: e.nombre }))
         }
       },
-      { accessorKey: 'prioridad', header: 'Prioridad', meta: { filterType: 'text', editable: true } },
-    ], 
-    [estados, estadoIdToNombre]
+      { accessorKey: 'prioridad', header: 'Prioridad', meta: { filterType: 'select', editable: true } },
+    ],
+    [estados, estadoIdToNombre, usuarios]
   );
 
-  // ← Función para manejar el guardado de cambios
   const handleSaveChanges = async (changes: Array<{
     identifier: string | number;
     columnId: string;
     newValue: any;
   }>) => {
     try {
-      // Llamar al servicio para cada cambio
       for (const change of changes) {
         let valueToSend = change.newValue;
-        // Si se edita estado_id pero el usuario (futuro) escribe nombre, intentar mapear
         if (change.columnId === 'estado_id') {
           if (typeof valueToSend === 'string' && /\D/.test(valueToSend)) {
-            // Contiene letras: intentar buscar id por nombre exacto
             const maybeId = estadoNombreToId[valueToSend];
             if (maybeId) valueToSend = maybeId;
           } else if (typeof valueToSend === 'string') {
-            // número string
             const parsed = parseInt(valueToSend, 10);
             if (!isNaN(parsed)) valueToSend = parsed;
           }
@@ -209,7 +207,6 @@ export const AdminDashboard = () => {
         );
       }
 
-      // Actualizar los datos locales después de guardar exitosamente
       setTableData(prevData => {
         const newData = [...prevData];
         changes.forEach(change => {
@@ -219,8 +216,8 @@ export const AdminDashboard = () => {
               ...newData[index],
               [change.columnId]: change.columnId === 'estado_id'
                 ? (typeof change.newValue === 'string' && /\D/.test(change.newValue)
-                    ? estadoNombreToId[change.newValue] ?? change.newValue
-                    : change.newValue)
+                  ? estadoNombreToId[change.newValue] ?? change.newValue
+                  : change.newValue)
                 : change.newValue
             };
           }
@@ -228,22 +225,17 @@ export const AdminDashboard = () => {
         return newData;
       });
 
-      // Aquí podrías mostrar un mensaje de éxito
       console.log('Cambios guardados exitosamente');
     } catch (error) {
       console.error('Error al guardar cambios:', error);
-      // Aquí podrías mostrar un mensaje de error al usuario
-      throw error; // Re-lanzar el error para que el componente DataTable_2 lo maneje
+      throw error;
     }
   };
 
   if (activeSection === 'assign') {
     return (
       <div className={styles.dashboard}>
-        <button 
-          onClick={() => setActiveSection(null)}
-          className={styles.backButton}
-        >
+        <button onClick={() => setActiveSection(null)} className={styles.backButton}>
           ← Volver
         </button>
         <AdminAssignator />
@@ -254,86 +246,95 @@ export const AdminDashboard = () => {
   if (activeSection === 'data') {
     return (
       <div className={styles.dashboard}>
-        <button 
-          onClick={() => setActiveSection(null)}
-          className={styles.backButton}
-        >
+        <button onClick={() => setActiveSection(null)} className={styles.backButton}>
           ← Volver
         </button>
         
         <div className={styles.uploadSection}>
           <div className={styles.uploadCard}>
-            <h3>Cargar Cuentas Medicas</h3>
-            <input 
-              type="file" 
-              accept=".xlsx,.xls"
-              className={styles.fileInput}
-              id="excelFile"
-              onChange={handleFileSelect}
-            />
-            <label htmlFor="excelFile" className={styles.fileLabel}>
-              Seleccionar archivo
-            </label>
-            {fileToUpload && (
-              <div style={{marginTop:'0.75rem', fontSize:'0.7rem', color:'#374151'}}>Seleccionado: {fileToUpload.name}</div>
-            )}
-            <div style={{marginTop:'0.75rem', display:'flex', gap:'0.5rem', flexWrap:'wrap'}}>
-              <button
-                type="button"
-                onClick={handleUpload}
-                disabled={!fileToUpload || uploadStatus==='uploading'}
-                style={{
-                  padding:'0.55rem 1.2rem',
-                  background: uploadStatus==='success' ? '#10b981' : '#ed1b22',
-                  border:'none',
-                  color:'#fff',
-                  borderRadius:8,
-                  fontSize:'0.75rem',
-                  fontWeight:600,
-                  cursor: !fileToUpload || uploadStatus==='uploading' ? 'not-allowed' : 'pointer',
-                  opacity: !fileToUpload || uploadStatus==='uploading' ? 0.65 : 1,
-                  transition:'background .25s'
-                }}
-              >
-                {uploadStatus==='uploading' ? 'Subiendo...' : uploadStatus==='success' ? 'Subido' : 'Subir'}
-              </button>
-              {uploadStatus==='error' && (
+            <div className={styles.uploadHeader}>
+              <h3>Cargar Cuentas Médicas</h3>
+              {uploadStatus !== 'idle' && (
+                <span className={styles.uploadStatus} data-status={uploadStatus}>
+                  {uploadMessage}
+                </span>
+              )}
+            </div>
+            <div className={styles.uploadControls}>
+              <div className={styles.fileSelectWrapper}>
+                <input
+                  type="file"
+                  accept=".xlsx,.xls"
+                  className={styles.fileInput}
+                  id="excelFile"
+                  onChange={handleFileSelect}
+                />
+                <label htmlFor="excelFile" className={styles.fileLabel}>
+                  {fileToUpload ? fileToUpload.name : 'Seleccionar archivo Excel'}
+                </label>
+              </div>
+              <div className={styles.uploadActions}>
                 <button
                   type="button"
                   onClick={handleUpload}
-                  style={{padding:'0.5rem 0.9rem',background:'#f59e0b',border:'none',color:'#fff',borderRadius:8,fontSize:'0.7rem',fontWeight:600,cursor:'pointer'}}
-                >Reintentar</button>
-              )}
-              {fileToUpload && uploadStatus!=='uploading' && (
-                <button
-                  type="button"
-                  onClick={()=>{ setFileToUpload(null); setUploadStatus('idle'); setUploadMessage(''); const input = document.getElementById('excelFile') as HTMLInputElement| null; if (input) input.value=''; }}
-                  style={{padding:'0.5rem 0.9rem',background:'#6b7280',border:'none',color:'#fff',borderRadius:8,fontSize:'0.7rem',fontWeight:600,cursor:'pointer'}}
-                >Limpiar</button>
-              )}
-            </div>
-            {uploadStatus !== 'idle' && (
-              <div style={{marginTop:'0.5rem', fontSize:'0.65rem', fontWeight:500, color: uploadStatus==='error' ? '#dc2626' : uploadStatus==='success' ? '#059669' : '#374151'}}>
-                {uploadMessage}
+                  disabled={!fileToUpload || uploadStatus==='uploading'}
+                  className={styles.uploadButton}
+                  data-status={uploadStatus}
+                >
+                  {uploadStatus==='uploading' ? 'Subiendo...' : uploadStatus==='success' ? '✓ Subido' : 'Subir'}
+                </button>
+                {uploadStatus==='error' && (
+                  <button
+                    type="button"
+                    onClick={handleUpload}
+                    className={styles.retryButton}
+                  >
+                    Reintentar
+                  </button>
+                )}
+                {fileToUpload && uploadStatus!=='uploading' && (
+                  <button
+                    type="button"
+                    onClick={()=>{
+                      setFileToUpload(null);
+                      setUploadStatus('idle');
+                      setUploadMessage('');
+                      const input = document.getElementById('excelFile') as HTMLInputElement| null;
+                      if (input) input.value='';
+                    }}
+                    className={styles.clearButton}
+                  >
+                    Limpiar
+                  </button>
+                )}
               </div>
-            )}
+            </div>
           </div>
         </div>
 
         <div className={styles.tableContainer + ' ' + styles.loadingWrapper}>
           <div style={{display:'flex',gap:'1rem',padding:'0.75rem 1rem',alignItems:'center'}}>
             <label style={{fontSize:'0.8rem',fontWeight:600}}>Fecha:</label>
-            <input type="date" value={fechaFiltro} onChange={(e)=>setFechaFiltro(e.target.value)} style={{padding:'0.35rem 0.5rem',border:'1px solid #d1d5db',borderRadius:6}} />
-            <button onClick={startProgressiveLoad} style={{padding:'0.4rem 0.9rem',borderRadius:6,border:'1px solid #ed1b22',background:'#ed1b22',color:'#fff',fontSize:'0.75rem',fontWeight:600,cursor:'pointer'}}>Refrescar</button>
-            {/* Eliminado HUD de progreso para hacerlo transparente al usuario */}
+            <input
+              type="date"
+              value={fechaFiltro}
+              onChange={(e)=>setFechaFiltro(e.target.value)}
+              style={{padding:'0.35rem 0.5rem',border:'1px solid #d1d5db',borderRadius:6}}
+            />
+            <button
+              onClick={startProgressiveLoad}
+              style={{padding:'0.4rem 0.9rem',borderRadius:6,border:'1px solid #ed1b22',background:'#ed1b22',color:'#fff',fontSize:'0.75rem',fontWeight:600,cursor:'pointer'}}
+            >
+              Refrescar
+            </button>
           </div>
           {isInitialLoading && <div className={styles.loadingOverlay} aria-label="Cargando casos" />}
           <DataTable_2
             data={tableData}
             columns={adminColumns}
             pageSize={10}
-            identifierKey="radicado" // ← Usar 'radicado' como identificador único
-            onSaveChanges={handleSaveChanges} // ← Pasar la función para guardar cambios
+            identifierKey="radicado"
+            onSaveChanges={handleSaveChanges}
             externalPageIndex={pageIndex}
             onPageChange={setPageIndex}
           />
@@ -346,16 +347,10 @@ export const AdminDashboard = () => {
     <div className={styles.dashboard}>
       <h1>Panel Administrador</h1>
       <div className={styles.content}>
-        <section 
-          className={styles.section}
-          onClick={() => setActiveSection('assign')}
-        >
+        <section className={styles.section} onClick={() => setActiveSection('assign')}>
           <h2>Asignar Usuarios</h2>
         </section>
-        <section 
-          className={styles.section}
-          onClick={() => setActiveSection('data')}
-        >
+        <section className={styles.section} onClick={() => setActiveSection('data')}>
           <h2>Cargar Datos</h2>
         </section>
       </div>

@@ -102,29 +102,6 @@ h1 {
 /* ===== Tarjetas de estadísticas ===== */
 .statsCards {
   display: flex;
-  gap: 0.75rem;
-}
-
-.statCard {
-  min-width: 90px;
-  padding: 0.55rem 1.5rem;
-  background: var(--ud-surface);
-  border-radius: 12px;
-  text-align: center;
-  box-shadow: var(--ud-shadow-sm);
-  border: 1px solid var(--ud-border);
-  transition: transform 0.15s ease, box-shadow 0.2s ease;
-  position: relative;
-  overflow: hidden;
-}
-.statCard:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--ud-shadow-md);
-}
-
-/* Línea inferior por estado */
-.statsCards {
-  display: flex;
   gap: 0.9rem;
   align-items: stretch;
 }
@@ -149,7 +126,7 @@ h1 {
   border-color: #d7dee6;
 }
 
-/* Barra inferior por estado (se mantiene) */
+/* Barra inferior por estado */
 .statCard::after {
   content: '';
   position: absolute;
@@ -162,7 +139,7 @@ h1 {
 .stat_nocompletado::after  { background: #6366f1; }
 
 .statCount {
-  font-size: 1.65rem;        /* sutilmente más compacto */
+  font-size: 1.65rem;
   font-weight: 800;
   line-height: 1.05;
   margin-bottom: 0.2rem;
@@ -213,7 +190,7 @@ h1 {
   box-shadow: var(--ud-shadow-sm);
   border: 1px solid var(--ud-border);
   position: relative;
-  overflow: hidden; /* ok: el popover del DataTable es fixed */
+  overflow: hidden;
 }
 
 .nameCell { color: var(--ud-text); }
@@ -257,6 +234,50 @@ h1 {
 @keyframes spin { to { transform: rotate(360deg); } }
 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
+/* ===== Advertencia de caso asignado ===== */
+.warningOverlay {
+  position: fixed;
+  top: 80px;
+  right: 20px;
+  z-index: 5000;
+  animation: slideInRight 0.3s ease-out;
+}
+.warningBox {
+  background: linear-gradient(135deg, #fff5e6 0%, #ffffff 100%);
+  border: 2px solid #f59e0b;
+  border-radius: 14px;
+  padding: 1.25rem 1.5rem;
+  box-shadow: 0 12px 32px rgba(245, 158, 11, 0.25);
+  max-width: 380px;
+  text-align: center;
+}
+.warningIcon {
+  font-size: 2.5rem;
+  margin-bottom: 0.5rem;
+}
+.warningTitle {
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: #92400e;
+  margin: 0 0 0.5rem 0;
+}
+.warningText {
+  font-size: 0.9rem;
+  color: #78350f;
+  margin: 0 0 0.75rem 0;
+  font-weight: 600;
+}
+.warningNote {
+  font-size: 0.72rem;
+  color: #a16207;
+  margin: 0;
+  font-style: italic;
+}
+@keyframes slideInRight {
+  from { transform: translateX(100%); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+
 /* ===== Modal ===== */
 .modalOverlay {
   position: fixed;
@@ -265,7 +286,7 @@ h1 {
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 4000; /* por encima del header/profileMenu */
+  z-index: 4000;
   backdrop-filter: blur(4px);
 }
 .modalContent {
@@ -471,4 +492,13 @@ h1 {
   .newCaseButton { padding: 0.75rem 1.5rem; font-size: 0.875rem; }
   .modalContent { width: 95%; }
   .modalFooter { flex-direction: column; }
+  
+  .warningOverlay {
+    top: 70px;
+    right: 10px;
+    left: 10px;
+  }
+  .warningBox {
+    max-width: 100%;
+  }
 }

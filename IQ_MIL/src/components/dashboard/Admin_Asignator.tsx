@@ -132,8 +132,8 @@ export const AdminDashboard: React.FC = () => {
   }, [usuarios]);
 
   const columns = useMemo<ColumnDef<Usuario>[]>(() => [
-    { accessorKey: 'correo', header: 'Correo', meta: { filterType: 'text', minWidth: 220 } },
-    { accessorKey: 'nombre', header: 'Nombre', meta: { filterType: 'text', editable: true, editType: 'text', minWidth: 180 } },
+    { accessorKey: 'correo', header: 'Correo', meta: { filterType: 'multiselect', minWidth: 220 } },
+    { accessorKey: 'nombre', header: 'Nombre', meta: { filterType: 'multiselect', editable: true, editType: 'text', minWidth: 180 } },
     { accessorKey: 'role_id', header: 'Rol', cell: info => roleNameById[info.getValue() as number] || '', meta: { filterType: 'select', options: roles.map(r => r.id), minWidth: 120 } },
     { accessorKey: 'id_lider', header: 'Líder', cell: info => { const val = info.getValue<string | null>(); if (!val) return ''; const opt = leaderOptions.find(o => o.value === val); return opt?.label || val; }, meta: { filterType: 'select', editable: true, editType: 'select', editOptions: leaderOptions, minWidth: 200 } },
     { accessorKey: 'activo', header: 'Activo', cell: info => { const row = info.row.original as Usuario; return <button className={row.activo ? styles.badgeActive : styles.badgeInactive} onClick={() => toggleActivo(row)} disabled={saving}>{row.activo ? 'Sí' : 'No'}</button>; }, meta: { filterType: 'select', options: [true, false], minWidth: 90 } }
@@ -144,7 +144,7 @@ export const AdminDashboard: React.FC = () => {
       <div className={styles.header}>
         <h1>Usuarios & Asignaciones</h1>
         <div className={styles.actions}>
-          <div className={styles.searchBar}>
+          {/* <div className={styles.searchBar}>
             <input
               className={styles.searchInput}
               placeholder="Buscar correo o nombre..."
@@ -156,7 +156,7 @@ export const AdminDashboard: React.FC = () => {
                 <X size={14} />
               </button>
             )}
-          </div>
+          </div> */}
           <button className={styles.btnPrimary} onClick={() => setShowModal('user')} disabled={saving}>+ Crear Usuario</button>
         </div>
       </div>

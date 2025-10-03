@@ -40,6 +40,16 @@ export const LeaderDashboard = () => {
     }
   }, [user, dateFilter]);
 
+// Helper: YYYY-MM-DD HH:mm
+  const formatDateTime = (value?: string | null) => {
+      if (!value) return '-';
+      const d = new Date(value);
+      if (isNaN(d.getTime())) return '-';
+      const pad = (n: number) => String(n).padStart(2, '0');
+      return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+    };
+
+
   useEffect(() => {
     fetchResumen();
   }, [fetchResumen]);
@@ -128,24 +138,35 @@ export const LeaderDashboard = () => {
     ];
   }, [teamData]);
 
-  const detailColumns = useMemo<ColumnDef<MemberDetail>[]>(() => [
-    { accessorKey: 'radicado', header: 'Radicado', meta: { filterType: 'text' }, enableSorting: true },
-    { accessorKey: 'raw.ruta_imagen', header: 'Ruta Imagen', meta: { filterType: 'text' }, cell: ({ row }) => { const v = (row.original as any).raw?.ruta_imagen; return <span>{v ?? ''}</span>; } },
-    { 
-      accessorKey: 'estado', 
-      header: 'Estado', 
-      meta: { filterType: 'select', options: estadosOptions }, 
-      cell: ({ row }) => { 
-        const estado = row.original.estado; 
-        const estadoClass = estado?.toLowerCase().replace(/\s+/g, '') || ''; 
-        return <span className={`${styles.statusBadge} ${estadoClass && styles[estadoClass] ? styles[estadoClass] : ''}`}>{estado}</span>; 
-      } 
-    },
-    { accessorKey: 'fecha_inicio', header: 'Fecha Inicio', meta: { filterType: 'none' } },
-    { accessorKey: 'fecha_fin', header: 'Fecha Fin', meta: { filterType: 'none' }, cell: ({ row }) => row.original.fecha_fin || '-' },
-    { accessorKey: 'total_minutos', header: 'Total Minutos', meta: { filterType: 'none' }, cell: ({ row }) => { const v = row.original.total_minutos; return v == null ? '' : `${v} min`; } },
-    { accessorKey: 'total_servicios', header: 'Total Servicios', meta: { filterType: 'none' }, cell: ({ row }) => { const v = row.original.total_servicios; return v == null ? '' : v; } },
-  ], []);
+const detailColumns = useMemo<ColumnDef<MemberDetail>[]>(() => [
+  { accessorKey: 'radicado', header: 'Radicado', meta: { filterType: 'text' }, enableSorting: true },
+  { accessorKey: 'raw.ruta_imagen', header: 'Ruta Imagen', meta: { filterType: 'text' }, cell: ({ row }) => { const v = (row.original as any).raw?.ruta_imagen; return <span>{v ?? ''}</span>; } },
+  { 
+    accessorKey: 'estado', 
+    header: 'Estado', 
+    meta: { filterType: 'select', options: estadosOptions }, 
+    cell: ({ row }) => { 
+      const estado = row.original.estado; 
+      const estadoClass = estado?.toLowerCase().replace(/\s+/g, '') || ''; 
+      return <span className={`${styles.statusBadge} ${estadoClass && styles[estadoClass] ? styles[estadoClass] : ''}`}>{estado}</span>; 
+    } 
+  },
+  {
+    accessorKey: 'fecha_inicio',
+    header: 'Fecha Inicio',
+    meta: { filterType: 'none' },
+    cell: ({ row }) => <span>{formatDateTime(row.original.fecha_inicio)}</span>
+  },
+  {
+    accessorKey: 'fecha_fin',
+    header: 'Fecha Fin',
+    meta: { filterType: 'none' },
+    cell: ({ row }) => <span>{formatDateTime(row.original.fecha_fin)}</span>
+  },
+  { accessorKey: 'total_minutos', header: 'Total Minutos', meta: { filterType: 'none' }, cell: ({ row }) => { const v = row.original.total_minutos; return v == null ? '' : `${v} min`; } },
+  { accessorKey: 'total_servicios', header: 'Total Servicios', meta: { filterType: 'none' }, cell: ({ row }) => { const v = row.original.total_servicios; return v == null ? '' : v; } },
+], [estadosOptions]);
+
 
   // Calcular estadísticas de detalle
   const detailStats = useMemo(() => {
