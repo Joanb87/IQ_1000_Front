@@ -130,6 +130,7 @@ export const LeaderDashboard = () => {
 
   const detailColumns = useMemo<ColumnDef<MemberDetail>[]>(() => [
     { accessorKey: 'radicado', header: 'Radicado', meta: { filterType: 'text' }, enableSorting: true },
+    { accessorKey: 'raw.ruta_imagen', header: 'Ruta Imagen', meta: { filterType: 'text' }, cell: ({ row }) => { const v = (row.original as any).raw?.ruta_imagen; return <span>{v ?? ''}</span>; } },
     { 
       accessorKey: 'estado', 
       header: 'Estado', 
