@@ -31,15 +31,9 @@ export const AdminDashboard = () => {
         const list = await estadosService.listar();
         setEstados(list);
       } catch { /* ignore */ }
-    })();
-  }, []);
-
-  // Cargar usuarios (cacheados) una sola vez
-  useEffect(() => {
-    (async () => {
       try {
-        const list = await usuariosService.listar();
-        setUsuarios(list);
+        const us = await usuariosService.listar();
+        setUsuarios(us);
       } catch { /* ignore */ }
     })();
   }, []);
@@ -63,7 +57,16 @@ export const AdminDashboard = () => {
       order: 'DESC',
       signal: controller.signal,
       onChunk: (chunk, info) => {
-        setTableData(prev => prev.concat(chunk));
+        setTableData(prev => {
+          // Optimización: si es la primera página, reemplazar completamente
+          if (info.page === 1) return chunk;
+          
+          // Para páginas subsecuentes, deduplicar eficientemente
+          if (chunk.length === 0) return prev;
+          const seen = new Set(prev.map(it => it.radicado));
+          const newItems = chunk.filter(item => !seen.has(item.radicado));
+          return newItems.length > 0 ? [...prev, ...newItems] : prev;
+        });
         if (info.page === 1) setIsInitialLoading(false);
       }
     }).catch(err => {
@@ -74,6 +77,7 @@ export const AdminDashboard = () => {
     });
   }, [fechaFiltro]);
 
+  // Cargar datos al montar y cuando cambie la fecha
   useEffect(() => {
     startProgressiveLoad();
     return () => abortRef.current?.abort();
@@ -117,7 +121,7 @@ export const AdminDashboard = () => {
         meta: { editable: true, filterType: 'none'  },
       },
       { accessorKey: 'ruta_imagen', header: 'Ruta Imagen', meta: { filterType: 'multiselect' } },
-      { accessorKey: 'caso', header: 'Caso', meta: { filterType: 'none', editable: true } },
+      { accessorKey: 'caso', header: 'Caso', meta: { filterType: 'none', editable: false } },
       {
         accessorKey: 'fecha_asignacion',
         header: 'Fecha Asignación',
@@ -134,16 +138,23 @@ export const AdminDashboard = () => {
           const v = row.getValue('lider') as string | null;
           if (!v) return '';
           const u = usuarios.find(x => x.correo === v);
-          return u?.nombre ? `${u.nombre} (${v})` : v;
+          // Mostrar solo nombre; si no existe o está vacío, mostrar correo
+          return (u?.nombre?.trim() || v);
         },
         meta: {
-          filterType: 'select',
+          filterType: 'multiselect',
           options: usuarios.map(u => u.correo),
+          // Mostrar en el filtro el nombre con correo
+          filterOptions: usuarios.map(u => ({
+            value: u.correo,
+            label: u.nombre ? `${u.nombre}` : u.correo
+          })),
           editable: true,
           editType: 'select',
           editOptions: usuarios.map(u => ({
             value: u.correo,
-            label: u.nombre ? `${u.nombre} (${u.correo})` : u.correo
+            // En edición mostrar solo el nombre; si no hay, usar el correo
+            label: (u.nombre?.trim() || u.correo)
           }))
         }
       },
@@ -154,11 +165,16 @@ export const AdminDashboard = () => {
           const v = row.getValue('usuario_asignacion') as string | null;
           if (!v) return '';
           const u = usuarios.find(x => x.correo === v);
-          return u?.nombre ? `${u.nombre} (${v})` : v;
+          // Mostrar solo nombre; si no existe o está vacío, mostrar correo
+          return (u?.nombre?.trim() || v);
         },
         meta: {
-          filterType: 'select',
+          filterType: 'multiselect',
           options: usuarios.map(u => u.correo),
+          filterOptions: usuarios.map(u => ({
+            value: u.correo,
+            label: u.nombre ? `${u.nombre}` : u.correo
+          })),
           editable: false
         }
       },
@@ -173,6 +189,7 @@ export const AdminDashboard = () => {
         meta: {
           filterType: 'select',
           options: estados.map(e => String(e.id)),
+          filterOptions: estados.map(e => ({ value: String(e.id), label: e.nombre })),
           editable: true,
           editType: 'select',
           editOptions: estados.map(e => ({ value: e.id, label: e.nombre }))
