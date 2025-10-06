@@ -33,7 +33,7 @@ export const LeaderDashboard = () => {
     if (!silent) setIsLoadingResumen(true);
     try {
       // CONSERVADO como lo tenías:
-      const data = await leaderService.resumenOperadores(dateFilter, 'diana.giraldo@iq-online.com'); // user.email
+      const data = await leaderService.resumenOperadores(dateFilter, user.email ); // 'diana.giraldo@iq-online.com'
       setTeamData(data);
       setLastUpdated(new Date());
     } catch (e) {
