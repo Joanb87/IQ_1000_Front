@@ -2,6 +2,9 @@ import { useState } from 'react';
 import { auth } from '../../../config/firebase';
 import { useAuth } from '../../../context/AuthContext';
 import styles from './Header.module.css';
+import nepsblanco from '../../../assets/neps_blanco.png';
+import iqLogo from '../../../assets/iq_logo.png';
+
 
 const roleLabels = {
   admin: 'Administrador',
@@ -31,7 +34,7 @@ export const Header = () => {
       <div className={styles.leftSection}>
         <div className={styles.logoContainer}>
           <img 
-            src="/src/assets/neps_blanco.png" 
+            src={nepsblanco}
             alt="NEPS Logo" 
             className={styles.nepsLogo}
           />
@@ -55,7 +58,7 @@ export const Header = () => {
           <div className={styles.profileContainer}>
             <div className={styles.companyLogo}>
               <img 
-                src="/src/assets/iq_logo.png" 
+                src={iqLogo}
                 alt="IQ Logo" 
                 className={styles.companyIcon}
               />
