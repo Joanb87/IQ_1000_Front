@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { X } from 'lucide-react';
 import styles from './Admin_Asignator.module.css';
 import { usuariosService, type Usuario } from '../../services/usuariosService';
 import { rolesService, type Rol } from '../../services/rolesService';
@@ -17,7 +16,7 @@ export const AdminDashboard: React.FC = () => {
   const [newUserEmail, setNewUserEmail] = useState('');
   const [newUserRoleId, setNewUserRoleId] = useState<number | ''>('');
   const [newUserLeader, setNewUserLeader] = useState<string>('');
-  const [searchQuery, setSearchQuery] = useState('');
+  // Eliminado: búsqueda global no usada actualmente
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -64,7 +63,10 @@ export const AdminDashboard: React.FC = () => {
         id_lider: newUserLeader || undefined,
         activo: true
       });
-      setUsuarios(await usuariosService.listar());
+      // Limpiar caché y forzar refresh para ver el nuevo usuario sin recargar
+      usuariosService.clearCache();
+      const fresh = await usuariosService.listar(true);
+      setUsuarios(fresh);
       setShowModal(null);
       setNewUserEmail('');
       setNewUserName('');
@@ -83,11 +85,7 @@ export const AdminDashboard: React.FC = () => {
 
   const roleNameById = useMemo(() => Object.fromEntries(roles.map(r => [r.id, r.nombre])), [roles]);
 
-  const filteredUsuarios = useMemo(() => {
-    const q = searchQuery.toLowerCase();
-    if (!q) return usuarios;
-    return usuarios.filter(u => u.correo.toLowerCase().includes(q) || (u.nombre || '').toLowerCase().includes(q));
-  }, [usuarios, searchQuery]);
+  const filteredUsuarios = useMemo(() => usuarios, [usuarios]);
 
   const onSaveChanges = useCallback(async (changes: Array<{ identifier: string; columnId: string; newValue: any }>) => {
     // Agrupar cambios por usuario
@@ -121,6 +119,14 @@ export const AdminDashboard: React.FC = () => {
       }
 
       setUsuarios(prev => prev.map(u => updatedUsers[u.correo] ? { ...u, ...updatedUsers[u.correo] } : u));
+      // Además, refrescar desde backend para sincronizar cualquier normalización del servidor
+      try {
+        usuariosService.clearCache();
+        const fresh = await usuariosService.listar(true);
+        setUsuarios(fresh);
+      } catch {
+        // si falla el refresh, al menos ya reflejamos cambios locales arriba
+      }
     } catch (e: any) {
       console.error('[Asignator] Error guardando:', e);
       setError(e?.message || 'Error guardando cambios');
@@ -134,8 +140,8 @@ export const AdminDashboard: React.FC = () => {
   const columns = useMemo<ColumnDef<Usuario>[]>(() => [
     { accessorKey: 'correo', header: 'Correo', meta: { filterType: 'multiselect', minWidth: 220 } },
     { accessorKey: 'nombre', header: 'Nombre', meta: { filterType: 'multiselect', editable: true, editType: 'text', minWidth: 180 } },
-    { accessorKey: 'role_id', header: 'Rol', cell: info => roleNameById[info.getValue() as number] || '', meta: { filterType: 'select', options: roles.map(r => r.id), minWidth: 120 } },
-    { accessorKey: 'id_lider', header: 'Líder', cell: info => { const val = info.getValue<string | null>(); if (!val) return ''; const opt = leaderOptions.find(o => o.value === val); return opt?.label || val; }, meta: { filterType: 'select', editable: true, editType: 'select', editOptions: leaderOptions, minWidth: 200 } },
+  { accessorKey: 'role_id', header: 'Rol', cell: info => roleNameById[info.getValue() as number] || '', meta: { filterType: 'select', options: roles.map(r => String(r.id)), filterOptions: roles.map(r => ({ value: String(r.id), label: r.nombre })), minWidth: 120 } },
+  { accessorKey: 'id_lider', header: 'Líder', cell: info => { const val = info.getValue<string | null>(); if (!val) return ''; const opt = leaderOptions.find(o => o.value === val); return opt?.label || val; }, meta: { filterType: 'select', options: leaderOptions.map(l => l.value), filterOptions: leaderOptions.map(l => ({ value: l.value, label: l.label })), editable: true, editType: 'select', editOptions: leaderOptions, minWidth: 200 } },
     { accessorKey: 'activo', header: 'Activo', cell: info => { const row = info.row.original as Usuario; return <button className={row.activo ? styles.badgeActive : styles.badgeInactive} onClick={() => toggleActivo(row)} disabled={saving}>{row.activo ? 'Sí' : 'No'}</button>; }, meta: { filterType: 'select', options: [true, false], minWidth: 90 } }
   ], [leaderOptions, roleNameById, roles, saving, toggleActivo]);
 

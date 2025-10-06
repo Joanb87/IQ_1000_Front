@@ -20,6 +20,7 @@ type FilterType = 'text' | 'select' | 'multiselect' | 'none';
 type ColumnMeta = {
   filterType?: FilterType;
   options?: Array<string | number | boolean>;
+  filterOptions?: Array<{ value: any; label: string }>; // para filtro select con etiquetas
   editable?: boolean;
   editType?: 'text' | 'select';
   editOptions?: Array<{ value: any; label: string }>; // para select
@@ -392,6 +393,39 @@ function Filter({ column }: { column: any }) {
   if (filterType === 'none') return null;
 
   if (filterType === 'select') {
+    const metaFilterOptions: Array<{ value: any; label: string }> | undefined = meta?.filterOptions;
+    if (metaFilterOptions && metaFilterOptions.length > 0) {
+      // Mostrar etiquetas amigables; pero restringir a valores presentes si es posible
+      const facetedSet = new Set(uniqueValues.map((v) => String(v)));
+      const optionsToShow = metaFilterOptions.filter((opt) => facetedSet.size ? facetedSet.has(String(opt.value ?? '')) : true);
+      return (
+        <div className={styles.filterWrap}>
+          <select
+            className={`${styles.filterSelect} ${styles.singleSelect}`}
+            value={(columnFilterValue as string) ?? ''}
+            onChange={(e) => column.setFilterValue(e.target.value || undefined)}
+          >
+            <option value="">Todos</option>
+            {optionsToShow.map((opt) => (
+              <option key={String(opt.value) || '__empty__'} value={String(opt.value ?? '')}>
+                {opt.label}
+              </option>
+            ))}
+          </select>
+
+          {(columnFilterValue ?? '') !== '' && (
+            <button
+              type="button"
+              className={styles.clearButton}
+              onClick={() => column.setFilterValue(undefined)}
+              title="Limpiar filtro"
+            >
+              ×
+            </button>
+          )}
+        </div>
+      );
+    }
     return (
       <div className={styles.filterWrap}>
         <select
