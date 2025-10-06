@@ -14,12 +14,9 @@ const roleLabels = {
 
 export const Header = () => {
   const [isProfileOpen, setIsProfileOpen] = useState(false);
-  const { user, setUserRole } = useAuth();
+  const { user } = useAuth();
 
-  const handleRoleChange = (newRole: 'admin' | 'lider' | 'usuario') => {
-    setUserRole(newRole);
-    setIsProfileOpen(false);
-  };
+
 
   const handleSignOut = async () => {
     try {
@@ -104,35 +101,6 @@ export const Header = () => {
                 <span className={styles.roleBadge}>
                   {user?.role && roleLabels[user.role]}
                 </span>
-              </div>
-            </div>
-            
-            <div className={styles.menuDivider} />
-            
-            <div className={styles.roleSwitcher}>
-              <h4 className={styles.roleTitle}>Cambiar Rol</h4>
-              <div className={styles.roleButtons}>
-                <button 
-                  className={`${styles.roleButton} ${user?.role === 'admin' ? styles.activeRole : ''}`}
-                  onClick={() => handleRoleChange('admin')}
-                >
-                  <span className={styles.roleDot}></span>
-                  Administrador
-                </button>
-                <button 
-                  className={`${styles.roleButton} ${user?.role === 'lider' ? styles.activeRole : ''}`}
-                  onClick={() => handleRoleChange('lider')}
-                >
-                  <span className={styles.roleDot}></span>
-                  Líder
-                </button>
-                <button 
-                  className={`${styles.roleButton} ${user?.role === 'usuario' ? styles.activeRole : ''}`}
-                  onClick={() => handleRoleChange('usuario')}
-                >
-                  <span className={styles.roleDot}></span>
-                  Usuario
-                </button>
               </div>
             </div>
             
