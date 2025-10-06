@@ -1,8 +1,9 @@
-import { createContext, useContext, useState, useEffect } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import type { ReactNode } from 'react';
 import { auth } from '../config/firebase';
 import type { User } from 'firebase/auth';
 import type { UserData, UserRole, BackendUserInfo } from '../types/auth';
+import { authValidationService } from '../services/authValidationService';
 
 const BACKEND_USER_STORAGE_KEY = 'auth_backend_user';
 
@@ -24,9 +25,12 @@ interface PersistedBackendData {
 interface AuthContextType {
   user: UserData | null;
   loading: boolean;
+  validationError: string | null;
+  isValidatingUser: boolean;
   setUserRole: (role: UserRole) => void;
   setUserFromBackend: (params: { firebaseUser: User; backend: BackendUserInfo; token: string }) => void;
   signOutLocal: () => Promise<void>;
+  validateUser: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -34,6 +38,8 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<UserData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [validationError, setValidationError] = useState<string | null>(null);
+  const [isValidatingUser, setIsValidatingUser] = useState(false);
 
   useEffect(() => {
     return auth.onAuthStateChanged((firebaseUser: User | null) => {
@@ -43,8 +49,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           const raw = localStorage.getItem(BACKEND_USER_STORAGE_KEY);
           if (raw) {
             const persisted: PersistedBackendData = JSON.parse(raw);
+            console.log('[AuthContext] Rehydrating from localStorage - rol_nombre:', persisted.backend.rol_nombre);
             if (persisted.uid === firebaseUser.uid) {
               const role = mapRolNombreToUserRole(persisted.backend.rol_nombre);
+              console.log('[AuthContext] localStorage rehydration - mapped role:', role);
               setUser({
                 uid: firebaseUser.uid,
                 email: firebaseUser.email,
@@ -60,6 +68,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               });
               setLoading(false);
               return;
+            } else {
+              console.log('[AuthContext] localStorage UID mismatch, clearing storage');
+              localStorage.removeItem(BACKEND_USER_STORAGE_KEY);
             }
           }
         } catch (e) {
@@ -67,6 +78,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
 
         // Fallback mínimo si no hay persistencia todavía
+        console.log('[AuthContext] Setting fallback user with role: usuario');
         setUser({
           uid: firebaseUser.uid,
           email: firebaseUser.email,
@@ -99,6 +111,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const setUserFromBackend: AuthContextType['setUserFromBackend'] = ({ firebaseUser, backend, token }) => {
     const role = mapRolNombreToUserRole(backend.rol_nombre);
+    console.log('[AuthContext] setUserFromBackend - rol_nombre:', backend.rol_nombre, 'mapped to role:', role);
     const enriched: UserData = {
       uid: firebaseUser.uid,
       email: firebaseUser.email,
@@ -126,18 +139,72 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const validateUser = useCallback(async () => {
+    if (!user?.email) return;
+    
+    setIsValidatingUser(true);
+    setValidationError(null);
+    
+    try {
+      const validation = await authValidationService.validateCurrentUser(user.email);
+      
+      if (!validation.isValid) {
+        setValidationError(validation.error || 'Error de validación');
+        // Auto logout si el usuario no es válido
+        await signOutLocal();
+        return;
+      }
+
+      // Actualizar datos del usuario si cambió algo en backend
+      if (validation.user && validation.role) {
+        const updatedRole = validation.role;
+        if (user.role !== updatedRole || user.active !== validation.user.activo) {
+          const enriched: UserData = {
+            ...user,
+            role: updatedRole,
+            active: validation.user.activo,
+            roleId: validation.user.role_id ?? undefined,
+            roleName: validation.user.role_id?.toString(), // Simplificado
+            rawBackend: validation.user as any
+          };
+          setUser(enriched);
+        }
+      }
+    } catch (error: any) {
+      setValidationError(error?.message || 'Error de conexión');
+    } finally {
+      setIsValidatingUser(false);
+    }
+  }, [user]);
+
   const signOutLocal = async () => {
     await auth.signOut();
     localStorage.removeItem(BACKEND_USER_STORAGE_KEY);
     setUser(null);
+    setValidationError(null);
   };
+
+  // Validar usuario cada 5 minutos si está logueado
+  useEffect(() => {
+    if (!user?.email) return;
+    
+    // Validar inmediatamente al login
+    validateUser();
+    
+    // Luego validar cada 5 minutos
+    const interval = setInterval(validateUser, 5 * 60 * 1000);
+    return () => clearInterval(interval);
+  }, [user?.email, validateUser]);
 
   const value: AuthContextType = {
     user,
     loading,
+    validationError,
+    isValidatingUser,
     setUserRole,
     setUserFromBackend,
     signOutLocal,
+    validateUser,
   };
 
   return (
