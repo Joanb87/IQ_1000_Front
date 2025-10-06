@@ -127,7 +127,11 @@ export const AdminDashboard = () => {
         header: 'Fecha Asignación',
         cell: ({ row }) => {
           const v = row.getValue('fecha_asignacion') as string | null;
-          return v ? new Date(v).toLocaleDateString('es-CO') : '';
+          if (!v) return '';
+          // Extraer solo la fecha sin conversión de timezone
+          const dateStr = v.split('T')[0]; // Toma solo YYYY-MM-DD
+          const [year, month, day] = dateStr.split('-');
+          return `${day}/${month}/${year}`;
         },meta: { filterType: 'none' }
       },
       { accessorKey: 'total_servicios', header: 'Total Servicios',meta: { filterType: 'none' } },
