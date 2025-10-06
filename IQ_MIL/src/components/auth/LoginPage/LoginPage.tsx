@@ -2,6 +2,9 @@ import { useEffect, useState } from 'react';
 import { SocialLogin } from '../SocialLogin/SocialLogin';
 import { BackgroundAnimation } from '../BackgroundAnimation/BackgroundAnimation';
 import styles from './LoginPage.module.css';
+import iqLogo from '../../../assets/iq_logo.png';
+import nepsLogo from '../../../assets/neps_logo.png';
+
 
 export const LoginPage = () => {
   const [animateText, setAnimateText] = useState(true);
@@ -44,8 +47,8 @@ export const LoginPage = () => {
       <div className={styles.formSection}>
         <div className={styles.formContent}>
           <div className={styles.logo}>
-            <img src="/src/assets/iq_logo.png" alt="IQ Logo" className={styles.logoImg} />
-            <img src="/src/assets/neps_logo.png" alt="NEPS Logo" className={styles.logoImg} />
+            <img src={iqLogo} alt="IQ Logo" className={styles.logoImg} />
+            <img src={nepsLogo} alt="NEPS Logo" className={styles.logoImg} />
           </div>
           <div className={styles.headerText}>
             <p className={`${styles.journeyText} ${animateText ? styles.animate : ''}`}>

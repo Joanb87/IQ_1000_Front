@@ -16,7 +16,6 @@ export const AdminDashboard: React.FC = () => {
   const [newUserEmail, setNewUserEmail] = useState('');
   const [newUserRoleId, setNewUserRoleId] = useState<number | ''>('');
   const [newUserLeader, setNewUserLeader] = useState<string>('');
-  const [searchQuery] = useState('');
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
