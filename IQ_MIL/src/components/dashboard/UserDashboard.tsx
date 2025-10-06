@@ -143,12 +143,12 @@ export const UserDashboard = () => {
 
   const teamColumns = useMemo<ColumnDef<TeamMember>[]>(() => [
     { accessorKey: 'radicado', header: 'Radicado', meta: { filterType: 'multiselect' }, enableSorting: true },
-    { accessorKey: 'raw.ruta_imagen', header: 'Ruta Imagen', meta: { filterType: 'text' }, cell: ({ row }) => {
+    { accessorKey: 'raw.ruta_imagen', header: 'Ruta Imagen', meta: { filterType: 'multiselect' }, cell: ({ row }) => {
         const v = (row.original as any).raw?.ruta_imagen;
         return <span>{v ?? ''}</span>;
       }
     },
-    { accessorKey: 'estado', header: 'Estado', meta: { filterType: 'select', options: estadosOptions }, cell: ({ row }) => {
+    { accessorKey: 'estado', header: 'Estado', meta: { filterType: 'multiselect', options: estadosOptions }, cell: ({ row }) => {
         const estado = row.getValue('estado') as string | undefined;
         if (!estado) return <span className={styles.statusBadge}>-</span>;
         const estadoClass = estado.toLowerCase().replace(/\s+/g, '');

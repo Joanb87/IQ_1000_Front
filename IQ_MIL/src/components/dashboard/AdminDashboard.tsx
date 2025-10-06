@@ -131,33 +131,33 @@ export const AdminDashboard = () => {
         },meta: { filterType: 'none' }
       },
       { accessorKey: 'total_servicios', header: 'Total Servicios',meta: { filterType: 'none' } },
-      {
-        accessorKey: 'lider',
-        header: 'Líder',
-        cell: ({ row }) => {
-          const v = row.getValue('lider') as string | null;
-          if (!v) return '';
-          const u = usuarios.find(x => x.correo === v);
-          // Mostrar solo nombre; si no existe o está vacío, mostrar correo
-          return (u?.nombre?.trim() || v);
-        },
-        meta: {
-          filterType: 'multiselect',
-          options: usuarios.map(u => u.correo),
-          // Mostrar en el filtro el nombre con correo
-          filterOptions: usuarios.map(u => ({
-            value: u.correo,
-            label: u.nombre ? `${u.nombre}` : u.correo
-          })),
-          editable: true,
-          editType: 'select',
-          editOptions: usuarios.map(u => ({
-            value: u.correo,
-            // En edición mostrar solo el nombre; si no hay, usar el correo
-            label: (u.nombre?.trim() || u.correo)
-          }))
-        }
+    {
+      accessorKey: 'lider',
+      header: 'Líder',
+      cell: ({ row }) => {
+        const v = row.getValue('lider') as string | null;
+        if (!v) return '';
+        const u = usuarios.find(x => x.correo === v);
+        return (u?.nombre?.trim() || v);
       },
+      meta: {
+        filterType: 'multiselect',
+        options: usuarios.map(u => u.correo),
+        filterOptions: usuarios.map(u => ({
+          value: u.correo,
+          label: u.nombre ? `${u.nombre}` : u.correo
+        })),
+        editable: true,
+        editType: 'select',
+        editOptions: usuarios.map(u => ({
+          value: u.correo,
+          label: (u.nombre?.trim() || u.correo)
+        })),
+        minWidth: 240,  
+        width: 'auto',   
+        maxWidth: 400    
+      }
+    },
       {
         accessorKey: 'usuario_asignacion',
         header: 'Usuario Asignación',
@@ -349,7 +349,7 @@ export const AdminDashboard = () => {
           <DataTable_2
             data={tableData}
             columns={adminColumns}
-            pageSize={10}
+            pageSize={8}
             identifierKey="radicado"
             onSaveChanges={handleSaveChanges}
             externalPageIndex={pageIndex}
