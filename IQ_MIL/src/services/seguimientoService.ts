@@ -20,6 +20,9 @@ interface SeguimientoRaw {
   fecha_fin: string | null;
   total_minutos: number | null;
   total_servicios_usuario: number | null;
+  ruta_imagen?: string;
+  ips_nit?: string;
+  factura?: string;
   [key: string]: any;
 }
 
@@ -34,6 +37,8 @@ export interface Seguimiento {
   fecha_fin: string | null;
   total_minutos: number | null;
   total_servicios: number | null;
+  ips_nit?: string;
+  factura?: string;
   raw: SeguimientoRaw;
 }
 
@@ -50,6 +55,8 @@ function adapt(raw: SeguimientoRaw): Seguimiento {
     fecha_fin: raw.fecha_fin,
     total_minutos: raw.total_minutos ?? null,
     total_servicios: raw.total_servicios_usuario ?? null,
+    ips_nit: raw.ips_nit,
+    factura: raw.factura,
     raw
   };
 }

@@ -148,6 +148,16 @@ export const UserDashboard = () => {
         return <span>{v ?? ''}</span>;
       }
     },
+    { accessorKey: 'ips_nit', header: 'IPS NIT', meta: { filterType: 'text' }, cell: ({ row }) => {
+        const v = row.getValue('ips_nit') as string | undefined;
+        return <span>{v ?? ''}</span>;
+      }
+    },
+    { accessorKey: 'factura', header: 'Factura', meta: { filterType: 'text' }, cell: ({ row }) => {
+        const v = row.getValue('factura') as string | undefined;
+        return <span>{v ?? ''}</span>;
+      }
+    },
     { accessorKey: 'estado', header: 'Estado', meta: { filterType: 'multiselect', options: estadosOptions }, cell: ({ row }) => {
         const estado = row.getValue('estado') as string | undefined;
         if (!estado) return <span className={styles.statusBadge}>-</span>;
