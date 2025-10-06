@@ -140,13 +140,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const validateUser = useCallback(async () => {
-    if (!user?.email) return;
+    const currentUser = user; // Capture current user to avoid stale closure
+    if (!currentUser?.email) return;
     
     setIsValidatingUser(true);
     setValidationError(null);
     
     try {
-      const validation = await authValidationService.validateCurrentUser(user.email);
+      const validation = await authValidationService.validateCurrentUser(currentUser.email);
       
       if (!validation.isValid) {
         setValidationError(validation.error || 'Error de validación');
@@ -156,15 +157,31 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
 
       // Actualizar datos del usuario si cambió algo en backend
-      if (validation.user && validation.role) {
+      if (validation.user && validation.role && currentUser) {
         const updatedRole = validation.role;
-        if (user.role !== updatedRole || user.active !== validation.user.activo) {
+        const updatedActive = validation.user.activo;
+        const updatedRoleId = validation.user.role_id ?? undefined;
+        
+        // Solo actualizar si realmente cambió algo importante
+        const hasChanges = 
+          currentUser.role !== updatedRole || 
+          currentUser.active !== updatedActive ||
+          currentUser.roleId !== updatedRoleId;
+          
+        if (hasChanges) {
+          console.log('[AuthContext] User data changed, updating...', {
+            oldRole: currentUser.role,
+            newRole: updatedRole,
+            oldActive: currentUser.active,
+            newActive: updatedActive
+          });
+          
           const enriched: UserData = {
-            ...user,
+            ...currentUser,
             role: updatedRole,
-            active: validation.user.activo,
-            roleId: validation.user.role_id ?? undefined,
-            roleName: validation.user.role_id?.toString(), // Simplificado
+            active: updatedActive,
+            roleId: updatedRoleId,
+            roleName: validation.user.role_id?.toString(),
             rawBackend: validation.user as any
           };
           setUser(enriched);
@@ -175,7 +192,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } finally {
       setIsValidatingUser(false);
     }
-  }, [user]);
+  }, [user?.email]);
 
   const signOutLocal = async () => {
     await auth.signOut();
@@ -192,9 +209,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     validateUser();
     
     // Luego validar cada 5 minutos
-    const interval = setInterval(validateUser, 5 * 60 * 1000);
+    const interval = setInterval(() => {
+      validateUser();
+    }, 5 * 60 * 1000);
     return () => clearInterval(interval);
-  }, [user?.email, validateUser]);
+  }, [user?.email]); // Solo depende del email, no de la función validateUser
 
   const value: AuthContextType = {
     user,
