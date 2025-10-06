@@ -21,6 +21,8 @@ export interface DataTableProps<T extends Record<string, any>> {
   pageSize?: number;
   className?: string;
   onRowClick?: (row: T) => void; // ← Nueva prop
+  autoResetPageIndex?: boolean; // ← NUEVO
+
 }
 
 /* ---------- FilterFns ---------- */
@@ -46,6 +48,7 @@ export function DataTable_2<T extends Record<string, any>>({
   pageSize = 10,
   className = '',
   onRowClick, // ← Recibe la prop
+  autoResetPageIndex = true, // ← NUEVO
 }: DataTableProps<T>) {
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [sorting, setSorting] = useState<SortingState>([]);
@@ -78,6 +81,7 @@ export function DataTable_2<T extends Record<string, any>>({
     getFacetedRowModel: getFacetedRowModel(),
     getFacetedUniqueValues: getFacetedUniqueValues(),
     initialState: { pagination: { pageSize } },
+    autoResetPageIndex,
   });
 
   useEffect(() => {
