@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { X } from 'lucide-react';
 import styles from './Admin_Asignator.module.css';
 import { usuariosService, type Usuario } from '../../services/usuariosService';
 import { rolesService, type Rol } from '../../services/rolesService';
