@@ -61,12 +61,9 @@ export const UserDashboard = () => {
   }, [fetchData]);
 
   const filteredData = useMemo(() => {
-    if (!dateFilter) return teamData;
-    return teamData.filter(item => {
-      const itemDate = new Date(item.fecha_inicio).toISOString().split('T')[0];
-      return itemDate === dateFilter;
-    });
-  }, [teamData, dateFilter]);
+    // El backend ya filtra por fecha, no necesitamos filtrar otra vez
+    return teamData;
+  }, [teamData]);
 
   const stats = useMemo(() => {
     return estadosOptions.map(estado => ({
