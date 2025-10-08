@@ -43,15 +43,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   // Auto-clear cache to prevent issues
   useEffect(() => {
-    const lastClear = localStorage.getItem('last_cache_clear');
+    const lastClear = localStorage.getItem('last_cache_up');
     const now = Date.now();
     const oneDay = 24 * 60 * 60 * 1000; // 24 hours
     
     if (!lastClear || (now - parseInt(lastClear)) > oneDay) {
       localStorage.clear();
       sessionStorage.clear();
-      localStorage.setItem('last_cache_clear', now.toString());
-      // Don't reload here, let the app continue normally
+      localStorage.setItem('last_cache_up', now.toString());
+      window.location.reload();
     }
   }, []);
 
