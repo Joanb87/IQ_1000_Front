@@ -41,6 +41,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [validationError, setValidationError] = useState<string | null>(null);
   const [isValidatingUser, setIsValidatingUser] = useState(false);
 
+  // Force cache refresh on app load
+  useEffect(() => {
+    const appVersion = localStorage.getItem('app_version');
+    const currentVersion = Date.now().toString();
+    
+    if (!appVersion || Date.now() - parseInt(appVersion) > 3600000) { // 1 hour
+      localStorage.setItem('app_version', currentVersion);
+      if (appVersion && 'serviceWorker' in navigator) {
+        // Clear service worker cache if exists
+        navigator.serviceWorker.getRegistrations().then(registrations => {
+          registrations.forEach(registration => registration.unregister());
+        });
+      }
+    }
+  }, []);
+
   useEffect(() => {
     return auth.onAuthStateChanged((firebaseUser: User | null) => {
       if (firebaseUser) {

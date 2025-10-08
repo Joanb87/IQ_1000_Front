@@ -1,5 +1,6 @@
 import { useState, useMemo, useEffect, useCallback } from 'react';
 import { DataTable_2 } from '../ui/DataTable/DataTable';
+import { Modal } from '../ui/Modal/Modal';
 import type { ColumnDef } from '@tanstack/react-table';
 import styles from './UserDashboard.module.css';
 import { seguimientoService, type Seguimiento } from '../../services/seguimientoService';
@@ -48,7 +49,7 @@ export const UserDashboard = () => {
     if (!user) return;
     try {
       setIsFetching(true);
-      const data = await seguimientoService.listar({ fecha: dateFilter, usuario: user.email || undefined });
+      const data = await seguimientoService.listar({ fecha: dateFilter, usuario: 'carol.gomez@iq-online.com' });
       setTeamData(data || []);
     } catch (error) {
       console.error('Error cargando seguimientos:', error);
@@ -248,9 +249,13 @@ export const UserDashboard = () => {
         </div>
       )}
 
-      {showModal && selectedCase && (
-        <div className={styles.modalOverlay} onClick={handleCloseModal}>
-          <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
+      <Modal 
+        isOpen={showModal && !!selectedCase} 
+        onClose={handleCloseModal}
+        title={showSuccess ? undefined : "Editar Caso"}
+      >
+        {selectedCase && (
+          <>
             {showSuccess ? (
               <div className={styles.successContainer}>
                 <div className={styles.checkmark}>
@@ -264,45 +269,39 @@ export const UserDashboard = () => {
               </div>
             ) : (
               <>
-                <div className={styles.modalHeader}>
-                  <h2>Editar Caso</h2>
-                  <button className={styles.closeButton} onClick={handleCloseModal}>×</button>
+                <div className={styles.infoRow}>
+                  <span className={styles.label}>Radicado:</span>
+                  <span className={styles.value}>{selectedCase.radicado}</span>
                 </div>
-                <div className={styles.modalBody}>
-                  <div className={styles.infoRow}>
-                    <span className={styles.label}>Radicado:</span>
-                    <span className={styles.value}>{selectedCase.radicado}</span>
-                  </div>
-                  <div className={styles.infoRow}>
-                    <span className={styles.label}>Nombre:</span>
-                    <span className={styles.value}>{selectedCase.nombre}</span>
-                  </div>
-                  <div className={styles.infoRow}>
-                    <span className={styles.label}>Fecha Inicio:</span>
-                    <span className={styles.value}>{formatDateTime(selectedCase.fecha_inicio)}</span>
-                  </div>
-                  <div className={styles.formGroup}>
-                    <label className={styles.formLabel}>Total Servicios *</label>
-                    <input
-                      type="number"
-                      className={styles.formInput}
-                      value={editForm.total_servicios}
-                      placeholder="Ingrese cantidad"
-                      min="1"
-                      onChange={(e) => setEditForm({ ...editForm, total_servicios: e.target.value })}
-                    />
-                  </div>
-                  <div className={styles.formGroup}>
-                    <label className={styles.formLabel}>Estado *</label>
-                    <select
-                      className={styles.formSelect}
-                      value={editForm.estado}
-                      onChange={(e) => setEditForm({ ...editForm, estado: e.target.value })}
-                    >
-                      <option value="">Seleccione un estado</option>
-                      {estadosOptions.map(option => <option key={option} value={option}>{option}</option>)}
-                    </select>
-                  </div>
+                <div className={styles.infoRow}>
+                  <span className={styles.label}>Nombre:</span>
+                  <span className={styles.value}>{selectedCase.nombre}</span>
+                </div>
+                <div className={styles.infoRow}>
+                  <span className={styles.label}>Fecha Inicio:</span>
+                  <span className={styles.value}>{formatDateTime(selectedCase.fecha_inicio)}</span>
+                </div>
+                <div className={styles.formGroup}>
+                  <label className={styles.formLabel}>Total Servicios *</label>
+                  <input
+                    type="number"
+                    className={styles.formInput}
+                    value={editForm.total_servicios}
+                    placeholder="Ingrese cantidad"
+                    min="1"
+                    onChange={(e) => setEditForm({ ...editForm, total_servicios: e.target.value })}
+                  />
+                </div>
+                <div className={styles.formGroup}>
+                  <label className={styles.formLabel}>Estado *</label>
+                  <select
+                    className={styles.formSelect}
+                    value={editForm.estado}
+                    onChange={(e) => setEditForm({ ...editForm, estado: e.target.value })}
+                  >
+                    <option value="">Seleccione un estado</option>
+                    {estadosOptions.map(option => <option key={option} value={option}>{option}</option>)}
+                  </select>
                 </div>
                 <div className={styles.modalFooter}>
                   <button className={styles.cancelButton} onClick={handleCloseModal}>Cancelar</button>
@@ -316,9 +315,9 @@ export const UserDashboard = () => {
                 </div>
               </>
             )}
-          </div>
-        </div>
-      )}
+          </>
+        )}
+      </Modal>
     </div>
   );
 };
