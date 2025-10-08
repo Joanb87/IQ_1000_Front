@@ -49,7 +49,7 @@ export const UserDashboard = () => {
     if (!user) return;
     try {
       setIsFetching(true);
-      const data = await seguimientoService.listar({ fecha: dateFilter, usuario: 'carol.gomez@iq-online.com' });
+      const data = await seguimientoService.listar({ fecha: dateFilter, usuario: user.email || undefined });
       setTeamData(data || []);
     } catch (error) {
       console.error('Error cargando seguimientos:', error);
