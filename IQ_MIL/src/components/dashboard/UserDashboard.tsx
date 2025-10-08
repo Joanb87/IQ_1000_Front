@@ -9,7 +9,6 @@ import { useAuth } from '../../context/AuthContext';
 interface TeamMember extends Seguimiento {}
 
 export const UserDashboard = () => {
-  const [componentKey, setComponentKey] = useState(Date.now());
   const [teamData, setTeamData] = useState<TeamMember[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isFetching, setIsFetching] = useState(false);
@@ -118,25 +117,7 @@ export const UserDashboard = () => {
     setShowSuccess(false);
   };
 
-  // Force component remount if DOM errors occur
-  useEffect(() => {
-    // Clear any corrupted state on mount
-    const currentVersion = '2025-10-08-v2';
-    const storedVersion = localStorage.getItem('dashboard_version');
-    
-    if (storedVersion !== currentVersion) {
-      localStorage.setItem('dashboard_version', currentVersion);
-      localStorage.removeItem('app_version');
-      setComponentKey(Date.now());
-    }
 
-    const handleError = () => {
-      setComponentKey(Date.now());
-    };
-    
-    window.addEventListener('error', handleError);
-    return () => window.removeEventListener('error', handleError);
-  }, []);
 
   const handleUpdateCase = async () => {
     if (!selectedCase || !user?.email || !isFormValid) return;
@@ -209,7 +190,7 @@ export const UserDashboard = () => {
   ], [estadosOptions]);
 
   return (
-    <div key={componentKey} className={styles.dashboard}>
+    <div className={styles.dashboard}>
       <div className={styles.content}>
         <section className={styles.section}>
           <div className={styles.tableHeader}>

@@ -41,19 +41,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [validationError, setValidationError] = useState<string | null>(null);
   const [isValidatingUser, setIsValidatingUser] = useState(false);
 
-  // Force cache refresh on app load
+  // Auto-clear cache to prevent issues
   useEffect(() => {
-    const appVersion = localStorage.getItem('app_version');
-    const currentVersion = Date.now().toString();
+    const lastClear = localStorage.getItem('last_cache_clear');
+    const now = Date.now();
+    const oneDay = 24 * 60 * 60 * 1000; // 24 hours
     
-    if (!appVersion || Date.now() - parseInt(appVersion) > 3600000) { // 1 hour
-      localStorage.setItem('app_version', currentVersion);
-      if (appVersion && 'serviceWorker' in navigator) {
-        // Clear service worker cache if exists
-        navigator.serviceWorker.getRegistrations().then(registrations => {
-          registrations.forEach(registration => registration.unregister());
-        });
-      }
+    if (!lastClear || (now - parseInt(lastClear)) > oneDay) {
+      localStorage.clear();
+      sessionStorage.clear();
+      localStorage.setItem('last_cache_clear', now.toString());
+      // Don't reload here, let the app continue normally
     }
   }, []);
 

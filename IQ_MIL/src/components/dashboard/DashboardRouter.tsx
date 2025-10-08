@@ -3,7 +3,6 @@ import { AdminDashboard } from './AdminDashboard';
 import { LeaderDashboard } from './LeaderDashboard';
 import { UserDashboard } from './UserDashboard';
 import { DashboardLayout } from './DashboardLayout';
-import { ErrorBoundary } from '../ErrorBoundary';
 import type { UserRole } from '../../types/auth';
 import type { FC } from 'react';
 
@@ -167,9 +166,7 @@ export const DashboardRouter = () => {
         </div>
       )}
       
-      <ErrorBoundary>
-        <DashboardComponent />
-      </ErrorBoundary>
+      <DashboardComponent />
     </DashboardLayout>
   );
 };
