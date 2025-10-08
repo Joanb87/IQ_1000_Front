@@ -9,6 +9,7 @@ import { useAuth } from '../../context/AuthContext';
 interface TeamMember extends Seguimiento {}
 
 export const UserDashboard = () => {
+  const [componentKey, setComponentKey] = useState(Date.now());
   const [teamData, setTeamData] = useState<TeamMember[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isFetching, setIsFetching] = useState(false);
@@ -49,7 +50,7 @@ export const UserDashboard = () => {
     if (!user) return;
     try {
       setIsFetching(true);
-      const data = await seguimientoService.listar({ fecha: dateFilter, usuario: user.email || undefined });
+      const data = await seguimientoService.listar({ fecha: dateFilter, usuario: user.email || undefined});
       setTeamData(data || []);
     } catch (error) {
       console.error('Error cargando seguimientos:', error);
@@ -116,6 +117,26 @@ export const UserDashboard = () => {
     setSelectedCase(null);
     setShowSuccess(false);
   };
+
+  // Force component remount if DOM errors occur
+  useEffect(() => {
+    // Clear any corrupted state on mount
+    const currentVersion = '2025-10-08-v2';
+    const storedVersion = localStorage.getItem('dashboard_version');
+    
+    if (storedVersion !== currentVersion) {
+      localStorage.setItem('dashboard_version', currentVersion);
+      localStorage.removeItem('app_version');
+      setComponentKey(Date.now());
+    }
+
+    const handleError = () => {
+      setComponentKey(Date.now());
+    };
+    
+    window.addEventListener('error', handleError);
+    return () => window.removeEventListener('error', handleError);
+  }, []);
 
   const handleUpdateCase = async () => {
     if (!selectedCase || !user?.email || !isFormValid) return;
@@ -188,7 +209,7 @@ export const UserDashboard = () => {
   ], [estadosOptions]);
 
   return (
-    <div className={styles.dashboard}>
+    <div key={componentKey} className={styles.dashboard}>
       <div className={styles.content}>
         <section className={styles.section}>
           <div className={styles.tableHeader}>
